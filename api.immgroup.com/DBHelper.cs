@@ -39,39 +39,54 @@ namespace api.immgroup.com
 
         }
 
-        public static bool ExecuteQuery(string Query)
+        public static void ExecuteQuery(string Query)
         {
-            int j = 0;
-            using (cmd = new SqlCommand(Query, con))
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                con.Open();
-                j = cmd.ExecuteNonQuery();
-                con.Close();
+                connection.Open();
+                try
+                {
+                    using (cmd = new SqlCommand(Query, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    connection.Close();
+                }
             }
-
-            if (j > 0)
-                return true;
-            else
-                return false;
-
         }
 
         public static string GetColumnVal(string Query, string ColumnName)
         {
             string RetVal = "";
-            cmd.CommandText = Query;
-            cmd.Connection = con;
-            con.Open();
-
-            sdr = cmd.ExecuteReader();
-            while (sdr.Read())
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                RetVal = sdr[ColumnName].ToString();
-                break;
+                connection.Open();
+                try
+                {
+                    using (cmd = new SqlCommand(Query, connection))
+                    {
+                        sdr = cmd.ExecuteReader();
+                        while (sdr.Read())
+                        {
+                            RetVal = sdr[ColumnName].ToString();
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    connection.Close();
+                }
             }
-
-            sdr.Close();
-            con.Close();
             return RetVal;
         }
 

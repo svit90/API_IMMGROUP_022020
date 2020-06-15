@@ -98,7 +98,7 @@ namespace api.immgroup.com.Controllers
         }
 
 
-        /*FUNCTION API FOR USER START*/
+        /*FUNCTION API FOR SEARCH BAR START*/
         [Produces("application/json")]
         [Route("crm/search/{key}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -134,7 +134,7 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
-        /*FUNCTION API FOR USER END*/
+        /*FUNCTION API FOR SEARCH BAR END*/
 
         /*FUNCTION API FOR MENU START*/
         [Produces("application/json")]
@@ -164,24 +164,23 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        /*FUNCTION API FOR MENU END*/
+
+        /*FUNCTION API FOR GET DATA START*/
         [Produces("application/json")]
-        [Route("crm/menu")]
+        [Route("crm/get/staff/all")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult GetMenu()
+        public IActionResult GetAllStaff()
         {
             try
             {
 
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    const string sql = "[dbo].[_012020_CRM_V3_api_get_All_Menu]";
+                    const string sql = "[dbo].[_0620_Workbase_GetAllStaff]";
                     var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
-                    var response = new
-                    {
-                        menu = items
-                    };
-                    return new OkObjectResult(response);
+                    return new OkObjectResult(items);
                 }
             }
             catch (Exception e)
@@ -195,6 +194,6 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
-        /*FUNCTION API FOR MENU END*/
+        /*FUNCTION API FOR GET DATA START*/
     }
 }
