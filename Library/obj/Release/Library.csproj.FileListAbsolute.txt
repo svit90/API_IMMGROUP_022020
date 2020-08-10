@@ -1,0 +1,10 @@
+E:\WORK\API_IMMGROUP_022020\Library\obj\Release\Library.csprojAssemblyReference.cache
+E:\WORK\API_IMMGROUP_022020\Library\obj\Release\Library.csproj.CoreCompileInputs.cache
+E:\WORK\API_IMMGROUP_022020\Library\bin\Release\Library.dll.config
+E:\WORK\API_IMMGROUP_022020\Library\bin\Release\Library.dll
+E:\WORK\API_IMMGROUP_022020\Library\bin\Release\Library.pdb
+E:\WORK\API_IMMGROUP_022020\Library\bin\Release\OpenPop.dll
+E:\WORK\API_IMMGROUP_022020\Library\bin\Release\OpenPop.xml
+E:\WORK\API_IMMGROUP_022020\Library\obj\Release\Library.csproj.CopyComplete
+E:\WORK\API_IMMGROUP_022020\Library\obj\Release\Library.dll
+E:\WORK\API_IMMGROUP_022020\Library\obj\Release\Library.pdb

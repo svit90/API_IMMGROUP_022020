@@ -97,7 +97,7 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-
+        #region SEARCH BAR
         /*FUNCTION API FOR SEARCH BAR START*/
         [Produces("application/json")]
         [Route("crm/search/{key}")]
@@ -135,7 +135,9 @@ namespace api.immgroup.com.Controllers
             }
         }
         /*FUNCTION API FOR SEARCH BAR END*/
+        #endregion
 
+        #region FUNCTION API FOR MENU
         /*FUNCTION API FOR MENU START*/
         [Produces("application/json")]
         [Route("crm/menu/all")]
@@ -165,7 +167,9 @@ namespace api.immgroup.com.Controllers
             }
         }
         /*FUNCTION API FOR MENU END*/
+        #endregion
 
+        #region FUNCTION API FOR GET DATA
         /*FUNCTION API FOR GET DATA START*/
         [Produces("application/json")]
         [Route("crm/get/staff/all")]
@@ -305,5 +309,57 @@ namespace api.immgroup.com.Controllers
             }
         }
         /*FUNCTION API FOR GET DATA START*/
+        #endregion
+
+        #region FUNCTION API RUN EXE
+
+        [Produces("application/json")]
+        [Route("crm/func/syncemail/{rowid}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult SyncEmailStaff(string rowid)
+        {
+            try
+            {
+                int _StaffId;
+                string _StaffName;
+                string _StaffEmail;
+                string _StaffPassEmail;
+                DateTime _MaxDate;
+                DataTable dt = new DataTable();
+                Dictionary<string, string> para = new Dictionary<string, string>() { { "@StaffRowId", rowid } };
+                foreach (DataRow row in (DBHelper.DB_ToDataTable("[dbo].[_0620_Workbase_Api_GetStaff_ByRowId]", para, CommandType.StoredProcedure)).Rows)
+                {
+                    _StaffId = Convert.ToInt32(row["STAFF_ID"]);
+                    _StaffName = row["STAFF_NAME"].ToString();
+                    _StaffEmail = row["STAFF_EMAIL"].ToString();
+                    _StaffPassEmail = row["STAFF_PASS_EMAIL"].ToString();
+                    _MaxDate = DateTime.Parse(row["DATE_SYNC"].ToString());  ;
+                }
+
+
+
+
+                var response = new
+                {
+                    ok = true,
+                    //mess = Error.Show(lang, code),
+                };
+
+                return new OkObjectResult(response);
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        #endregion
     }
 }
