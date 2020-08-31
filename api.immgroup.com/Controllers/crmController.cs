@@ -281,6 +281,7 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+
         [Produces("application/json")]
         [Route("crm/get/basiccode/search/{key}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -308,10 +309,38 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
-        /*FUNCTION API FOR GET DATA START*/
+
+        [Produces("application/json")]
+        [Route("crm/get/staff/permisson/{folder}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetStaffPermissFolder(string folder)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllStaffPermiss_byFoldername]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_FolderNAme = folder }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+        /*FUNCTION API FOR GET DATA END*/
         #endregion
 
-        #region FUNCTION API RUN EXE
+        #region FUNCTION API RUN EXE (Not use)
 
         [Produces("application/json")]
         [Route("crm/func/syncemail/{rowid}")]
