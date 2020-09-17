@@ -69,56 +69,7 @@ namespace api.immgroup.com.Controllers
         }
 
 
-        [Produces("application/json")]
-        [Route("crm/message/{lang}/{code}")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        public IActionResult GetMessageByCode(string lang,string code)
-        {
-            //[_0620_Workbase_GetMessage_Lang_Code]
-            try
-            {
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    const string sql = "[dbo].[_0620_Workbase_GetMessage_Lang_Code]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_language = lang, @P_code = code }, commandType: CommandType.StoredProcedure).ToList();
-                    return new OkObjectResult(items);
-                }
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-            
-            //try
-            //{
-            //    var response = new
-            //    {
-            //        ok = true,
-            //        mess = Error.Show(lang, code),
-            //    };
-
-            //    return new OkObjectResult(response);
-            //}
-            //catch (Exception e)
-            //{
-            //    var response = new
-            //    {
-            //        ok = false,
-            //        error = e.Message
-            //    };
-
-            //    return new BadRequestObjectResult(response);
-            //}
-        }
-
+       
         #region SEARCH BAR
         /*FUNCTION API FOR SEARCH BAR START*/
         [Produces("application/json")]
@@ -359,45 +310,23 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
-        /*FUNCTION API FOR GET DATA END*/
-        #endregion
-
-        #region FUNCTION API RUN EXE (Not use)
 
         [Produces("application/json")]
-        [Route("crm/func/syncemail/{rowid}")]
+        [Route("crm/get/message/{lang}/{code}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult SyncEmailStaff(string rowid)
+        public IActionResult GetMessageByCode(string lang, string code)
         {
+            //[_0620_Workbase_GetMessage_Lang_Code]
             try
             {
-                int _StaffId;
-                string _StaffName;
-                string _StaffEmail;
-                string _StaffPassEmail;
-                DateTime _MaxDate;
-                DataTable dt = new DataTable();
-                Dictionary<string, string> para = new Dictionary<string, string>() { { "@StaffRowId", rowid } };
-                foreach (DataRow row in (DBHelper.DB_ToDataTable("[dbo].[_0620_Workbase_Api_GetStaff_ByRowId]", para, CommandType.StoredProcedure)).Rows)
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    _StaffId = Convert.ToInt32(row["STAFF_ID"]);
-                    _StaffName = row["STAFF_NAME"].ToString();
-                    _StaffEmail = row["STAFF_EMAIL"].ToString();
-                    _StaffPassEmail = row["STAFF_PASS_EMAIL"].ToString();
-                    _MaxDate = DateTime.Parse(row["DATE_SYNC"].ToString());  ;
+                    const string sql = "[dbo].[_0620_Workbase_GetMessage_Lang_Code]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_language = lang, @P_code = code }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
                 }
-
-
-
-
-                var response = new
-                {
-                    ok = true,
-                    //mess = Error.Show(lang, code),
-                };
-
-                return new OkObjectResult(response);
             }
             catch (Exception e)
             {
@@ -409,6 +338,39 @@ namespace api.immgroup.com.Controllers
 
                 return new BadRequestObjectResult(response);
             }
+        }
+
+
+        /*FUNCTION API FOR GET DATA END*/
+        #endregion
+
+        #region FUNCTION API CHECK
+
+        [Produces("application/json")]
+        [Route("crm/check/{token}/{verifycode}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult VerifySessionLoginStaff(string token, string verifycode)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_Verify_Login_Session_Staff]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @token = token, @verifycode = verifycode }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }           
         }
 
         #endregion
