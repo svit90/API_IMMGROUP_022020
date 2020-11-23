@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using api.immgroup.com;
+using api.immgroup.com.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace api.immgroup.com.Controllers
 {
@@ -107,6 +109,7 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+
         /*FUNCTION API FOR SEARCH BAR END*/
         #endregion
 
@@ -149,6 +152,63 @@ namespace api.immgroup.com.Controllers
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
         public IActionResult GetAllStaff()
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllStaff]";
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        /*FUNCTION API FOR GET DATA START*/
+        [Produces("application/json")]
+        [Route("crm/get/team/all")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeams()
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllStaff]";
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/team/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetStaffofTeams(string id)
         {
             try
             {
@@ -341,6 +401,69 @@ namespace api.immgroup.com.Controllers
         }
 
 
+        [Produces("application/json")]
+        [Route("crm/get/notification/{mode}/{rowid}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetConversation_ByStaff(string mode, string rowid)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetNotification_ByMode]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Token = rowid }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+
+        [Produces("application/json")]
+        [Route("crm/get/emailheader/{mode}/{email}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetEmailHeader(string mode, string email)
+        {
+            try
+            {
+                const string sql = "[dbo].[_0620_Workbase_GetEmailHeader_ByEmail]";
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_mode = mode, @P_email = email }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
         /*FUNCTION API FOR GET DATA END*/
         #endregion
 
@@ -371,6 +494,54 @@ namespace api.immgroup.com.Controllers
 
                 return new BadRequestObjectResult(response);
             }           
+        }
+
+        #endregion
+
+        #region FUNCTION API EXC
+
+        [Produces("application/json")]
+        [Route("crm/func/todo/addnew")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> AddNewTodoList([FromBody] TodoListModel data)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_TodoList_AddNew]";
+                    var items = db.Query<dynamic>(sql: sql,
+                        param: new
+                        {
+                            @Owner = data.Owner,
+                            @TaskDetails = data.TaskDetails,
+                            @Rate = data.Rate,
+                            @Active = data.Active
+                        },
+                        commandType: CommandType.StoredProcedure).ToList();
+                    
+                    // Response
+                    var response = new
+                    {
+                        ok = true,
+                        description = "004",
+                    };
+                    return new OkObjectResult(response);
+                    
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
         }
 
         #endregion
