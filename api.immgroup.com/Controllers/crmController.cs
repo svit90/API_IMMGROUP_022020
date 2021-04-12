@@ -13,6 +13,9 @@ using Microsoft.Extensions.Configuration;
 using api.immgroup.com;
 using api.immgroup.com.Models;
 using Microsoft.AspNetCore.Cors;
+using Library;
+using JsonResult = Library.JsonResult;
+using Newtonsoft.Json.Linq;
 
 namespace api.immgroup.com.Controllers
 {
@@ -464,6 +467,184 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Produces("application/json")]
+        [Route("crm/get/teams/{token}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeamsDetails(string token)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllTeam_ByToken]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/setting/function/{code}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetFunctionDetails(string code)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_Setting_GetAllFunction]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Key = code }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/template/details/{code}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeamPlateDetails(string code)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2019_LOAD_EMAIL_TEMPLATE_BYID]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_STAFF_ID = code }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/cus/profile/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetCusProfileDetails(int id)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[LOAD_CUS_INFOR]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_CUSID = id }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+       
+        [Route("crm/get/export/customer/itemquery")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        [HttpGet]
+        [HttpPost]
+        public IActionResult ExpoertListCus(string Product, string ProfileStatus, string SeriousRate, string Evaluation)
+        //public IActionResult ExpoertListCus([FromForm]ItemsQuery itemquery)
+        {
+            try
+            {
+                Product = Lib.SplitAndAddSeparator(Product);
+                ProfileStatus = Lib.SplitAndAddSeparator(ProfileStatus);
+                SeriousRate = Lib.SplitAndAddSeparator(SeriousRate);
+                Evaluation = Lib.SplitAndAddSeparator(Evaluation);
+                string _view = "[V_Workbase_Export_Cus_ByQuery]";
+                string _sql = " SELECT ";
+                _sql += "  CusId ";
+                _sql += " ,CusName ";
+                _sql += " ,CusEmail ";
+                _sql += " ,CusPhone ";
+                _sql += " ,CusGenderName ";
+                _sql += " ,RegoinOfficeName ";
+                _sql += " ,ProductName ";
+                _sql += " ,ProfileStatusName ";
+                _sql += " ,SeriousRateName ";
+                _sql += " ,EvaluationStatusName ";
+                _sql += " FROM " + _view + " WHERE 1 = 1 ";
+                if (Product != "")
+                {
+                    _sql += " AND ProductCode IN ( " + Product + " ) ";
+                }
+                if (ProfileStatus != "")
+                {
+                    _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
+                }
+                if (SeriousRate != "")
+                {
+                    _sql += " AND SeriousRate IN ( " + SeriousRate + " ) ";
+                }
+                if (Evaluation != "")
+                {
+                    _sql += " AND EvaluationStatus IN ( " + Evaluation + " ) ";
+                }
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql,
+                        commandType: CommandType.Text).ToList();
+                    return new OkObjectResult(items);
+                }               
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+
         /*FUNCTION API FOR GET DATA END*/
         #endregion
 
@@ -496,9 +677,63 @@ namespace api.immgroup.com.Controllers
             }           
         }
 
+        [Produces("application/json")]
+        [Route("crm/check/func/{token}/{code}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult VerifyFunctionAsignedStaff(string token, string code)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_Setting_GetAllFunction_AsignedUser]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token, @P_Code = code }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/check/access/{cusid}/{token}/{staffid}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult VerifynAccessStaffToProfile(int staffid, string token, int cusid)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_Check_StatusAccessToProfile]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_StaffId = staffid, @P_Token = token, @P_CusId = cusid }, commandType: CommandType.StoredProcedure).ToList();
+                    //Check
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
         #endregion
 
-        #region FUNCTION API EXC
+        #region FUNCTION API EXT
 
         [Produces("application/json")]
         [Route("crm/func/todo/addnew")]

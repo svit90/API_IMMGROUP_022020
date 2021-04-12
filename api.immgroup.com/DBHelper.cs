@@ -347,6 +347,29 @@ namespace api.immgroup.com
 
     public static class Lib
     {
+        public static string SplitAndAddSeparator(string inObject)
+        {
+            string outObject = "";
+            try
+            {
+                inObject = inObject.Replace(" ", "");
+                string[] words = inObject.Split(',');
+                foreach (var line in words)
+                {
+                    if (line != "")
+                    {
+                        outObject += ",'" + line + "'";
+                    }
+                }
+                outObject = outObject.Substring(1);
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+            return outObject;
+        }
+
         public static bool CheckClientIp()
         {
             var result = GetClientIp().Result;
