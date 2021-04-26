@@ -586,8 +586,7 @@ namespace api.immgroup.com.Controllers
         [AllowAnonymous]
         [HttpGet]
         [HttpPost]
-        public IActionResult ExpoertListCus(string Product, string ProfileStatus, string SeriousRate, string Evaluation)
-        //public IActionResult ExpoertListCus([FromForm]ItemsQuery itemquery)
+        public IActionResult ExportListCus(string Product, string ProfileStatus, string SeriousRate, string Evaluation)
         {
             try
             {
@@ -608,19 +607,19 @@ namespace api.immgroup.com.Controllers
                 _sql += " ,SeriousRateName ";
                 _sql += " ,EvaluationStatusName ";
                 _sql += " FROM " + _view + " WHERE 1 = 1 ";
-                if (Product != "")
+                if (Product != "" && Product != "'*'")
                 {
                     _sql += " AND ProductCode IN ( " + Product + " ) ";
                 }
-                if (ProfileStatus != "")
+                if (ProfileStatus != "" && ProfileStatus != "'*'")
                 {
                     _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
                 }
-                if (SeriousRate != "")
+                if (SeriousRate != "" && SeriousRate != "'*'")
                 {
                     _sql += " AND SeriousRate IN ( " + SeriousRate + " ) ";
                 }
-                if (Evaluation != "")
+                if (Evaluation != "" && Evaluation != "'*'")
                 {
                     _sql += " AND EvaluationStatus IN ( " + Evaluation + " ) ";
                 }
@@ -630,6 +629,35 @@ namespace api.immgroup.com.Controllers
                         commandType: CommandType.Text).ToList();
                     return new OkObjectResult(items);
                 }               
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Route("crm/get/export/customer/staff/{id}/following")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]      
+        public IActionResult ExportListStaffFollowing(string id)
+        {
+            try
+            {
+                string _sql = "_0620_Workbase_Get_Customer_Following_ByStaffId";
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_STAFF = id },
+                        commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
             }
             catch (Exception e)
             {
