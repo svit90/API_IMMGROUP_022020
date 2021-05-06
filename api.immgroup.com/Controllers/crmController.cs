@@ -119,10 +119,10 @@ namespace api.immgroup.com.Controllers
         #region FUNCTION API FOR MENU
         /*FUNCTION API FOR MENU START*/
         [Produces("application/json")]
-        [Route("crm/menu/all")]
+        [Route("crm/menu/all/{token}/")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult GetAllMenu()
+        public IActionResult GetAllMenu(string token)
         {
             try
             {
@@ -130,7 +130,7 @@ namespace api.immgroup.com.Controllers
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_012020_CRM_V3_api_get_All_Menu]";
-                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Token = token }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
             }
@@ -431,6 +431,33 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Produces("application/json")]
+        [Route("crm/get/notification/{mode}/{rowid}/{lastindex}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetNotification_ByStaff_WithLastIndex(string mode, string rowid, int lastindex)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetNotification_ByMode_WithLastIndex]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Token = rowid, @LastIndex = lastindex }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
 
         [Produces("application/json")]
         [Route("crm/get/emailheader/{mode}/{email}")]
@@ -479,6 +506,33 @@ namespace api.immgroup.com.Controllers
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_0620_Workbase_GetAllTeam_ByToken]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+        [Produces("application/json")]
+        [Route("crm/get/teams/product/{token}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeamsProductDetails(string token)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllTeamProduct_ByToken]";
                     var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
@@ -672,6 +726,63 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Route("crm/get/export/customer/blocked/{id}/{office}/{sale}")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult ExportBlockedListStaffNotFollowing(string id, string office, string sale)
+        {
+            try
+            {
+                string _sql = "_0620_Workbase_Get_ListCus_TeamFlw_Over_Day";
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_Vp = office, @P_Staff = id, @P_Sale = sale },
+                        commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Route("crm/get/customer/blocked/{id}/{sale}")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult CheckBlockedCusStaffHandling(string id, string sale)
+        {
+            try
+            {
+                string _sql = "_0620_Workbase_Check_SaleHandle_BlockedCus";
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_CusId = id, @P_StaffId =  sale },
+                        commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
 
         /*FUNCTION API FOR GET DATA END*/
         #endregion
