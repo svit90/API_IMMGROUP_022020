@@ -577,6 +577,7 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+
         [Produces("application/json")]
         [Route("crm/get/template/details/{code}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -604,6 +605,7 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+
 
         [Produces("application/json")]
         [Route("crm/get/cus/profile/{id}")]
@@ -633,7 +635,34 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-       
+        [Produces("application/json")]
+        [Route("crm/get/sas/total-count/{id}/byproduct")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetSASTotalCountEveryStaff(string id)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_SAS_Allocation_GetTotalCount_ByProduct]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Product = id }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
         [Route("crm/get/export/customer/itemquery")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
