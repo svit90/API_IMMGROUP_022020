@@ -663,6 +663,35 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Produces("application/json")]
+        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty)
+        {
+            try
+            {
+                string dfrom = fd + "/" + fm + "/" + fy;
+                string dto = td + "/" + tm + "/" + ty;
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
         [Route("crm/get/export/customer/itemquery")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
