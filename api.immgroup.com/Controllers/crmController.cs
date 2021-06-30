@@ -432,6 +432,33 @@ namespace api.immgroup.com.Controllers
         }
 
         [Produces("application/json")]
+        [Route("crm/get/noticenter/{mode}/{rowid}/{cur}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetConversation_ByStaff(string mode, string rowid, string from, string cur)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetNotification_ByMode_LoadMore]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Token = rowid, @P_CurId = cur }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
         [Route("crm/get/notification/{mode}/{rowid}/{lastindex}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
