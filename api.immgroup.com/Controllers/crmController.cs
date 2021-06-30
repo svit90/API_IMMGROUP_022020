@@ -39,6 +39,71 @@ namespace api.immgroup.com.Controllers
         }
 
         [Produces("application/json")]
+        [Route("crm/get/message/{lang}/{code}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetMessageByCode(string lang, string code)
+        {
+            //[_0620_Workbase_GetMessage_Lang_Code]
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetMessage_Lang_Code]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_language = lang, @P_code = code }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/emailheader/{mode}/{email}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetEmailHeader(string mode, string email)
+        {
+            try
+            {
+                const string sql = "[dbo].[_0620_Workbase_GetEmailHeader_ByEmail]";
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_mode = mode, @P_email = email }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+
+        [Produces("application/json")]
         [Route("crm/login/{email}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
@@ -74,8 +139,7 @@ namespace api.immgroup.com.Controllers
         }
 
 
-       
-        #region SEARCH BAR
+        #region SEARCH BAR ON TOP
         /*FUNCTION API FOR SEARCH BAR START*/
         [Produces("application/json")]
         [Route("crm/search/{key}")]
@@ -85,7 +149,7 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
-                
+
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_All_Cus]";
@@ -149,7 +213,8 @@ namespace api.immgroup.com.Controllers
         #endregion
 
         #region FUNCTION API FOR GET DATA
-        /*FUNCTION API FOR GET DATA START*/
+
+        #region Nhân viên và Team
         [Produces("application/json")]
         [Route("crm/get/staff/all")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -178,7 +243,6 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-        /*FUNCTION API FOR GET DATA START*/
         [Produces("application/json")]
         [Route("crm/get/team/all")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -235,6 +299,64 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Produces("application/json")]
+        [Route("crm/get/teams/{token}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeamsDetails(string token)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllTeam_ByToken]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+        [Produces("application/json")]
+        [Route("crm/get/teams/product/{token}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetTeamsProductDetails(string token)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetAllTeamProduct_ByToken]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        #endregion
+
+        #region Quản lý tài sản
         [Produces("application/json")]
         [Route("crm/get/device/all")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -345,7 +467,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
+        #region IMM GROUP DRIVE STORAGE
         [Produces("application/json")]
         [Route("crm/get/staff/permisson/{folder}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -373,37 +497,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
-        [Produces("application/json")]
-        [Route("crm/get/message/{lang}/{code}")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        public IActionResult GetMessageByCode(string lang, string code)
-        {
-            //[_0620_Workbase_GetMessage_Lang_Code]
-            try
-            {
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    const string sql = "[dbo].[_0620_Workbase_GetMessage_Lang_Code]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_language = lang, @P_code = code }, commandType: CommandType.StoredProcedure).ToList();
-                    return new OkObjectResult(items);
-                }
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-        }
-
-
+        #region Notification
         [Produces("application/json")]
         [Route("crm/get/notification/{mode}/{rowid}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -484,98 +580,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
-
-        [Produces("application/json")]
-        [Route("crm/get/emailheader/{mode}/{email}")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        public IActionResult GetEmailHeader(string mode, string email)
-        {
-            try
-            {
-                const string sql = "[dbo].[_0620_Workbase_GetEmailHeader_ByEmail]";
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_mode = mode, @P_email = email }, commandType: CommandType.StoredProcedure).ToList();
-
-                    var response = new
-                    {
-                        ok = true,
-                        customers = items,
-                    };
-
-                    return new OkObjectResult(response);
-                }
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-        }
-
-        [Produces("application/json")]
-        [Route("crm/get/teams/{token}")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        public IActionResult GetTeamsDetails(string token)
-        {
-            try
-            {
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    const string sql = "[dbo].[_0620_Workbase_GetAllTeam_ByToken]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
-                    return new OkObjectResult(items);
-                }
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-        }
-        [Produces("application/json")]
-        [Route("crm/get/teams/product/{token}")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        public IActionResult GetTeamsProductDetails(string token)
-        {
-            try
-            {
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    const string sql = "[dbo].[_0620_Workbase_GetAllTeamProduct_ByToken]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Token = token }, commandType: CommandType.StoredProcedure).ToList();
-                    return new OkObjectResult(items);
-                }
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-        }
-
+        #region Setting System
         [Produces("application/json")]
         [Route("crm/get/setting/function/{code}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -603,8 +610,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
-
+        #region Template Email
         [Produces("application/json")]
         [Route("crm/get/template/details/{code}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -632,8 +640,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
-
+        #region Khách Hàng
         [Produces("application/json")]
         [Route("crm/get/cus/profile/{id}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -661,7 +670,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
+        #region Chia Lead
         [Produces("application/json")]
         [Route("crm/get/sas/total-count/{id}/byproduct")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -689,6 +700,9 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
+
+        #region Export Khách và Report
 
         [Produces("application/json")]
         [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
@@ -767,7 +781,7 @@ namespace api.immgroup.com.Controllers
                     var items = db.Query<dynamic>(sql: _sql,
                         commandType: CommandType.Text).ToList();
                     return new OkObjectResult(items);
-                }               
+                }
             }
             catch (Exception e)
             {
@@ -785,7 +799,7 @@ namespace api.immgroup.com.Controllers
         [Route("crm/get/export/customer/staff/{id}/following")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]      
+        [AllowAnonymous]
         public IActionResult ExportListStaffFollowing(string id)
         {
             try
@@ -851,7 +865,7 @@ namespace api.immgroup.com.Controllers
                 string _sql = "_0620_Workbase_Check_SaleHandle_BlockedCus";
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_CusId = id, @P_StaffId =  sale },
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_CusId = id, @P_StaffId = sale },
                         commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
@@ -868,8 +882,8 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
+        #endregion
 
-        /*FUNCTION API FOR GET DATA END*/
         #endregion
 
         #region FUNCTION API CHECK
@@ -898,7 +912,7 @@ namespace api.immgroup.com.Controllers
                 };
 
                 return new BadRequestObjectResult(response);
-            }           
+            }
         }
 
         [Produces("application/json")]
@@ -979,7 +993,7 @@ namespace api.immgroup.com.Controllers
                             @Active = data.Active
                         },
                         commandType: CommandType.StoredProcedure).ToList();
-                    
+
                     // Response
                     var response = new
                     {
@@ -987,7 +1001,7 @@ namespace api.immgroup.com.Controllers
                         description = "004",
                     };
                     return new OkObjectResult(response);
-                    
+
                 }
             }
             catch (Exception e)
