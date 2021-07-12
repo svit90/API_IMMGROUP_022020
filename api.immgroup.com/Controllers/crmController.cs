@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Cors;
 using Library;
 using JsonResult = Library.JsonResult;
 using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace api.immgroup.com.Controllers
 {
@@ -153,6 +154,42 @@ namespace api.immgroup.com.Controllers
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_All_Cus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("om/search/{key}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetOmtopic(string key)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[OM_Search_Topic]";
 
                     var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
 
@@ -971,52 +1008,167 @@ namespace api.immgroup.com.Controllers
         }
         #endregion
 
-        #region FUNCTION API EXT
+        #region FUNCTION API EXC
 
         [Produces("application/json")]
         [Route("crm/func/todo/addnew")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public async Task<IActionResult> AddNewTodoList([FromBody] TodoListModel data)
+        [HttpPost]
+        public IActionResult AddNewTodoList([FromBody] TodoListModel data)
         {
-            try
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
-                using (var db = new SqlConnection(DBHelper.connectionString))
+                connection.Open();
+                try
                 {
-                    const string sql = "[dbo].[_0620_Workbase_TodoList_AddNew]";
-                    var items = db.Query<dynamic>(sql: sql,
-                        param: new
+                    string RetVal = "";
+                    string Query = "[dbo].[_0620_Workbase_TodoList_AddNew]";
+                    using (DBHelper.cmd = new SqlCommand(Query, connection))
+                    {
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Owner", data.Owner);
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Todo", data.TaskDetails);
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Rate", data.Rate);
+                        DBHelper.cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
+                        while (DBHelper.sdr.Read())
                         {
-                            @Owner = data.Owner,
-                            @TaskDetails = data.TaskDetails,
-                            @Rate = data.Rate,
-                            @Active = data.Active
-                        },
-                        commandType: CommandType.StoredProcedure).ToList();
-
-                    // Response
+                            RetVal = DBHelper.sdr["TODO_ID"].ToString();
+                            break;
+                        }
+                        DBHelper.cmd.Parameters.Clear();
+                        DBHelper.sdr.Close();                       
+                        var response = new
+                        {
+                            TODO_ID = RetVal,
+                        };
+                        return new OkObjectResult(response);
+                    }
+                }
+                catch (Exception e)
+                {
                     var response = new
                     {
-                        ok = true,
-                        description = "004",
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
                     };
-                    return new OkObjectResult(response);
 
+                    return new BadRequestObjectResult(response);
                 }
-            }
-            catch (Exception e)
-            {
-                var response = new
+                finally
                 {
-                    ok = false,
-                    message = "Error",
-                    error = e.Message
-                };
+                    connection.Close();
+                }
+            }           
+        }
 
-                return new BadRequestObjectResult(response);
+
+        [HttpPost("crm/func/todolist/addnew")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> NewTodoList([FromBody] dynamic body)
+        {
+            try
+            {                
+                
+                //var authorizationHeader = Request.Headers["Authorization"].First();
+                //var key = authorizationHeader.Split(' ')[1];
+                //if (string.IsNullOrEmpty(key))
+                //{
+                //    return new BadRequestResult();
+                //}
+
+                //if (ValidateSecret(key) == false)
+                //{
+                //    return new BadRequestResult();
+                //}
+                string sql = "[dbo].[_0620_Workbase_AddNew_Todolist]";
+                dynamic para = JObject.Parse(body.ToString());
+                int Owner = para.Owner;
+                string TaskDetails = para.TaskDetails;
+                int Rate = para.Rate;
+                var dp = new DynamicParameters();
+                dp.Add("@P_Owner", Owner);
+                dp.Add("@P_Todo", TaskDetails);
+                dp.Add("@P_Rate", Rate);
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var rowAffected = await db.ExecuteAsync(sql, dp, commandType: CommandType.StoredProcedure);
+                    // RETURN
+                    var response = new { ok = true, rowAffected };
+                    return new OkObjectResult(response);
+                }
+
+            }
+            catch (Exception error)
+            {
+                var response = new { ok = false, error, body };
+                return BadRequest(response);
             }
         }
 
+        [HttpPost("crm/func/info/f/web/submit")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] dynamic body)
+        {
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    dynamic para = JObject.Parse(body.ToString());
+                    string sql = "INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql += " S_WEB_CONTENT, ";
+                    sql += " S_WEB_TITLE, ";
+                    sql += " S_WEB_SOURCE, ";
+                    sql += " S_WEB_LINK, ";
+                    sql += " FLAG_ACTIVE, ";
+                    sql += " S_WEB_NOTE_1, ";
+                    sql += " S__WEB_NOTE_2, ";
+                    sql += " S_WEB_DATE";
+                    sql += " ) ";
+                    sql += " VALUES ( ";
+                    sql += " N'" + para.rq_content + "', ";
+                    sql += " N'" + para.rq_titleProduct + "', ";
+                    sql += " N'" + para.rq_utmSource + "', ";
+                    sql += " N'" + para.rq_getLink + "', ";
+                    sql += " '1', ";
+                    sql += " '" + para.rq_area + "', ";
+                    sql += " N'" + para.rq_info + "', ";
+                    sql += " GETDATE())";
+                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    var response = new { ok = true, message = "Success", error ="Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }           
+        }
+
+        private bool ValidateSecret(string value)
+        {
+            return value.Equals("12C1F7EF9AC8E288FBC2177B7F54D", StringComparison.OrdinalIgnoreCase);
+        }
         #endregion
     }
 }

@@ -26,7 +26,18 @@ namespace api.immgroup.com
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           
+            //services.AddCors(c =>
+            //{
+            //    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin()
+            //                                .AllowAnyMethod()
+            //                                .AllowAnyHeader());
+            //});
+            //services.AddMvc()
+            //    .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+            //    .ConfigureApiBehaviorOptions(options =>
+            //    {
+            //        options.SuppressModelStateInvalidFilter = true;
+            //    });
             services.AddControllers();
             services.Configure<IISServerOptions>(options =>
             {
@@ -36,6 +47,17 @@ namespace api.immgroup.com
             {
                 options.ForwardClientCertificate = false;
             });
+            //services.AddHttpClient("system.immgroup.com", client =>
+            //{
+            //    //client.BaseAddress = new Uri("http://localhost:13579/");
+            //    client.BaseAddress = new Uri("https://system.immgroup.com");
+            //    client.DefaultRequestHeaders.Add("Accept", "application/x-www-form-urlencoded");
+            //});
+            //services.AddHttpClient("immgroup.com", client =>
+            //{
+            //    client.BaseAddress = new Uri("https://immgroup.com");
+            //    client.DefaultRequestHeaders.Add("Accept", "application/x-www-form-urlencoded");
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,6 +67,9 @@ namespace api.immgroup.com
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(options => options.AllowAnyOrigin()
+                                           .AllowAnyMethod()
+                                           .AllowAnyHeader());
 
             app.UseHttpsRedirection();
 
