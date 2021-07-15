@@ -1139,7 +1139,7 @@ namespace api.immgroup.com.Controllers
                     sql += " N'" + para.rq_utmSource + "', ";
                     sql += " N'" + para.rq_getLink + "', ";
                     sql += " '1', ";
-                    sql += " '" + para.rq_area + "', ";
+                    sql += " N'" + para.rq_area + "', ";
                     sql += " N'" + para.rq_info + "', ";
                     sql += " GETDATE())";
                     await connection.ExecuteAsync(sql, commandType: CommandType.Text);
@@ -1168,6 +1168,65 @@ namespace api.immgroup.com.Controllers
         private bool ValidateSecret(string value)
         {
             return value.Equals("12C1F7EF9AC8E288FBC2177B7F54D", StringComparison.OrdinalIgnoreCase);
+        }
+        #endregion
+
+        #region EmailHelper
+        [EnableCors("WebPolicy")]
+        [HttpPost("crm/func/sendmail-async")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        public IActionResult SendMailAsync([FromBody] dynamic data)
+        {
+            try
+            {
+                // SEND EMAIL
+                // TODO: 
+                //if (data.CustomerId != 12419)
+                {
+                    
+                    var mailHeader = data.MailHeader.Value;
+                    var senderEmail = data.SenderEmail.Value;
+                    var senderPassword = data.SenderPassword.Value;
+                    var toEmail = data.ToEmail.Value;
+                    var ccEmail = data.CcEmail.Value;
+                    var bccEmail = data.BccEmail.Value;
+                    var subject = data.Subject.Value;
+                    var bodyEmail = data.BodyEmail.Value;
+
+                    var from = "crm@immgroup.com";
+                    var password = "duyhhwbuverzqkac";
+
+                    if (senderEmail != "" && senderEmail != from)
+                    {
+                        from = senderEmail;
+                        password = senderPassword;
+                    }
+
+                    //SEND EMAIL
+                   //EmailHelper.Send(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
+                   EmailHelper.SendAsync(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
+                }
+
+                var response = new
+                {
+                    status = "OK",
+                    message = "Email Send",
+                };
+
+                return new OkObjectResult(response);
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    status = "Error",
+                    message = e.Message
+                };
+
+                return BadRequest(response);
+            }
         }
         #endregion
     }

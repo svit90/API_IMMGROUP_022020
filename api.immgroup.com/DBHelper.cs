@@ -19,6 +19,7 @@ using Message = OpenPop.Mime.Message;
 using System.Text.RegularExpressions;
 using System.IO;
 using Library;
+using System.Net.Mail;
 
 namespace api.immgroup.com
 {
@@ -363,7 +364,7 @@ namespace api.immgroup.com
                 }
                 outObject = outObject.Substring(1);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return "";
             }
@@ -452,5 +453,151 @@ namespace api.immgroup.com
             }           
             return flag;
         }
+
+        public static async Task<bool> SendAsync(string from, string password, string to, string cc, string bcc, string subject, string msg, MailPriority priority, Attachment attachFile, string displayName = "Hệ thống hồ sơ | IMM Group")
+        {
+            try
+            {
+                var message = new MailMessage();
+
+                // CC.
+                if (string.IsNullOrEmpty(cc) == false)
+                {
+                    foreach (var item in cc.Split(';'))
+                    {
+                        message.CC.Add(new MailAddress(item));
+                    }
+                }
+
+                // BCC.
+                if (string.IsNullOrEmpty(bcc) == false)
+                {
+                    foreach (var item in bcc.Split(';'))
+                    {
+                        message.Bcc.Add(new MailAddress(item));
+                    }
+                }
+
+                // TO.
+                if (string.IsNullOrEmpty(to) == false)
+                {
+                    foreach (var item in to.Split(';'))
+                    {
+                        if (item != "")
+                            message.To.Add(new MailAddress(item));
+                    }
+                }
+                // FROM
+                if (string.IsNullOrEmpty(from) == false)
+                {
+                    message.From = new MailAddress(from);
+                }
+
+                message.From = new MailAddress(message.From.Address, displayName);
+                message.Subject = subject;
+                message.Body = msg;
+                message.IsBodyHtml = true;
+                message.Priority = priority;
+
+                if (attachFile != null)
+                {
+                    message.Attachments.Add(attachFile);
+                }
+
+                using (var smtp = new SmtpClient())
+                {
+                    smtp.Credentials = new System.Net.NetworkCredential(from, password);
+                    smtp.Host = "smtp.gmail.com";
+                    smtp.Port = 587;
+                    smtp.EnableSsl = true;
+                    await smtp.SendMailAsync(message);
+                }
+
+                //var smtp = new SmtpClient("smtp.gmail.com", 587)
+                //{
+                //    EnableSsl = true,
+                //    UseDefaultCredentials = false,
+                //    Credentials = new System.Net.NetworkCredential(from, password),
+                //    DeliveryMethod = SmtpDeliveryMethod.Network
+                //};
+
+                //smtp.Send(message);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sending mail error: " + ex.Message);
+            }
+        }
+
+         public static bool Send(string from, string password, string to, string cc, string bcc, string subject, string msg, MailPriority priority, Attachment attachFile, string displayName = "Hệ thống hồ sơ | IMM Group")
+        {
+            try
+            {
+                var message = new MailMessage();
+
+                // CC.
+                if (string.IsNullOrEmpty(cc) == false)
+                {
+                    foreach (var item in cc.Split(';'))
+                    {
+                        message.CC.Add(new MailAddress(item));
+                    }
+                }
+
+                // BCC.
+                if (string.IsNullOrEmpty(bcc) == false)
+                {
+                    foreach (var item in bcc.Split(';'))
+                    {
+                        message.Bcc.Add(new MailAddress(item));
+                    }
+                }
+
+                // TO.
+                if (string.IsNullOrEmpty(to) == false)
+                {
+                    foreach (var item in to.Split(';'))
+                    {
+						if (item != "")
+							message.To.Add(new MailAddress(item));
+                    }
+                }
+                // FROM
+                if (string.IsNullOrEmpty(from) == false)
+                {
+                    message.From = new MailAddress(from);
+                }               
+
+                message.From = new MailAddress(message.From.Address, displayName);
+                message.Subject = subject;
+                message.Body = msg;
+                message.IsBodyHtml = true;
+                message.Priority = priority;
+
+                if (attachFile != null)
+				{
+					message.Attachments.Add(attachFile);
+				}
+
+				var smtp = new SmtpClient("smtp.gmail.com", 587)
+				{
+					EnableSsl = true,
+					UseDefaultCredentials = false,
+					Credentials = new System.Net.NetworkCredential(from, password),
+					DeliveryMethod = SmtpDeliveryMethod.Network
+				};
+
+				smtp.Send(message);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Sending mail error: " + ex.Message);
+            }
+        }
+    
     }
 }
