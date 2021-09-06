@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DBHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.30" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.6" />
@@ -35,8 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\AutoSyncEmail\Library\Library.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Library">
-      <HintPath>..\Library\bin\Release\Library.dll</HintPath>
+      <HintPath>..\..\WorkbaseImm_MVC\Library\obj\Release\Library.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

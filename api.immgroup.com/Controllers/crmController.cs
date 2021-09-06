@@ -14,7 +14,6 @@ using api.immgroup.com;
 using api.immgroup.com.Models;
 using Microsoft.AspNetCore.Cors;
 using Library;
-using JsonResult = Library.JsonResult;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
 
@@ -740,21 +739,66 @@ namespace api.immgroup.com.Controllers
         #endregion
 
         #region Export Khách và Report
-
         [Produces("application/json")]
-        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
+        [Route("crm/get/report/{mode}/contact/chart/all/week")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty)
+        public IActionResult GetcContactChartAllWeek(string mode)
         {
             try
             {
+                string sql = "";
+                if (mode == "c")
+                {
+                    sql = "[dbo].[REPORT_CUS_CONTACT_ALL_WEEK_COUNT]";
+                }
+                if (mode == "s")
+                {
+                    sql = "[dbo].[REPORT_STAFF_CONTACT_ALL_WEEK_COUNT]";
+                }
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {    
+
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        Version = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/{office}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty, string office)
+        {
+            try
+            {
+                if (office == "all") { office = ""; }
+                if (office == "hanoi"){office = "Hà Nội";}
+                if (office == "hochiminh") { office = "Hồ Chí Minh"; }
                 string dfrom = fd + "/" + fm + "/" + fy;
                 string dto = td + "/" + tm + "/" + ty;
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto }, commandType: CommandType.StoredProcedure).ToList();
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto , @P_Area = office }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
             }
@@ -780,6 +824,7 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
+                Function Lib = new Function();
                 Product = Lib.SplitAndAddSeparator(Product);
                 ProfileStatus = Lib.SplitAndAddSeparator(ProfileStatus);
                 SeriousRate = Lib.SplitAndAddSeparator(SeriousRate);
@@ -833,15 +878,20 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-        [Route("crm/get/export/customer/staff/{id}/following")]
+        [Route("crm/get/export/customer/staff/{id}/following/{mode}")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult ExportListStaffFollowing(string id)
+        public IActionResult ExportListStaffFollowing(string id, string mode)
         {
             try
             {
                 string _sql = "_0620_Workbase_Get_Customer_Following_ByStaffId";
+                if (mode == "lite")
+                {
+                    _sql = "_0620_Workbase_Get_Customer_Following_ByStaffId_Lite";
+                }               
+                
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     var items = db.Query<dynamic>(sql: _sql, param: new { @P_STAFF = id },
@@ -913,6 +963,42 @@ namespace api.immgroup.com.Controllers
                 {
                     ok = false,
                     message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("om/get/memo/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetOmtopicVersion(int id)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[OM_Get_Topic_Version_ByVersionId]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @VerID = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        Version = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
                     error = e.Message
                 };
 
@@ -1117,13 +1203,80 @@ namespace api.immgroup.com.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] dynamic body)
         {
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            int _s = 1;
+            string _e = para.rq_email;
+            string _p = para.rq_phone;
+            string _n = para.rq_cusname;
+            string Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'", "CUS_ID");
+            string sql = "";
+            if (_e != "" || _p != "")
+            {
+
+                if (para.rq_sex != "Nam") { _s = 0; }
+
+                if (Cusid == "" || Cusid == null)
+                {
+                    string str = "";
+                    string[] AppEmail = null;
+                    str = _e.ToString();
+                    char[] splitchar = { ';' };
+                    AppEmail = str.Split(splitchar);
+                    string pass = fc.GetUniqueKey(8);
+                    sql += "INSERT INTO M_CUSTOMER";
+                    sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+                    sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+                    sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+                    sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+                    sql += " VALUES";
+                    sql += " ( ";
+                    sql += "'',";
+                    sql += "N'" + _n + "',";
+                    sql += "N'" + fc.ConvertName(_n) + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "N'" + _p + "',";
+                    sql += "N'" + DateTime.Now.ToString() + "',";
+                    sql += "GETDATE(),";
+                    sql += _s + ",";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+                    sql += "'CR01',";
+                    sql += "'',";
+                    sql += "1,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "GETDATE(),";
+                    sql += "GETDATE(),";
+                    sql += "'" + pass + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "'" + AppEmail[0] + "',";
+                    sql += "'0',";
+                    sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
+                    sql += "N'" + _p + "',";
+                    sql += "'',";
+                    sql += "(select NEWID()),";
+                    sql += "'0','0','0','0','/img/avatar/cus_default_avatar.png',0,0,''";
+                    sql += " ); ";
+                    DBHelper.ExecuteQuery(sql);
+                    Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
+                }
+            }
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
                 try
                 {
-                    dynamic para = JObject.Parse(body.ToString());
-                    string sql = "INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql += " CUS_ID, ";
                     sql += " S_WEB_CONTENT, ";
                     sql += " S_WEB_TITLE, ";
                     sql += " S_WEB_SOURCE, ";
@@ -1134,6 +1287,7 @@ namespace api.immgroup.com.Controllers
                     sql += " S_WEB_DATE";
                     sql += " ) ";
                     sql += " VALUES ( ";
+                    sql += "'" + Cusid + "', ";
                     sql += " N'" + para.rq_content + "', ";
                     sql += " N'" + para.rq_titleProduct + "', ";
                     sql += " N'" + para.rq_utmSource + "', ";
@@ -1141,7 +1295,8 @@ namespace api.immgroup.com.Controllers
                     sql += " '1', ";
                     sql += " N'" + para.rq_area + "', ";
                     sql += " N'" + para.rq_info + "', ";
-                    sql += " GETDATE())";
+                    sql += " GETDATE());";
+
                     await connection.ExecuteAsync(sql, commandType: CommandType.Text);
                     var response = new { ok = true, message = "Success", error ="Thao tác hoàn tất" };
                     return new OkObjectResult(response);
@@ -1169,6 +1324,57 @@ namespace api.immgroup.com.Controllers
         {
             return value.Equals("12C1F7EF9AC8E288FBC2177B7F54D", StringComparison.OrdinalIgnoreCase);
         }
+
+        private void CheckAndAddCus(string _e, string _p , string _n, int _s)
+        {
+            string Cusid = "";
+            DataTable dt = new DataTable();
+            Function fc = new Function();
+            Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'","CUS_ID");
+          
+            if (Cusid == "" || Cusid == null) {           
+                string str = "";
+                string[] AppEmail = null;
+                str = _e.ToString();
+                char[] splitchar = { ';' };
+                AppEmail = str.Split(splitchar);
+                string pass = fc.GetUniqueKey(8);
+                string _sql = "INSERT INTO M_CUSTOMER";
+                _sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+                _sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+                _sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+                _sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+                _sql += " VALUES";
+                _sql += " ( ";
+                _sql += "'',";
+                _sql += "N'" + _n + "',";
+                _sql += "N'" + fc.ConvertName(_n) + "',";
+                _sql += "N'" + _e + "',";
+                _sql += "N'" + _p + "',";
+                _sql += "N'" + DateTime.Now.ToString() + "',";
+                _sql += "N'" + DateTime.Now + "',";
+                _sql += _s + ",";
+                _sql += "0,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+                _sql += "'CR01',";
+                _sql += "'',";
+                _sql += "1,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "0,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'" +  pass + "',";
+                _sql += "'" + AppEmail[0] + "',";
+                _sql += " ) ";
+                
+            }
+        }
         #endregion
 
         #region EmailHelper
@@ -1181,6 +1387,7 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
+                EmailHelper emh = new EmailHelper();
                 // SEND EMAIL
                 // TODO: 
                 //if (data.CustomerId != 12419)
@@ -1205,8 +1412,8 @@ namespace api.immgroup.com.Controllers
                     }
 
                     //SEND EMAIL
-                   //EmailHelper.Send(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
-                   EmailHelper.SendAsync(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
+                    //EmailHelper.Send(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
+                    emh.SendEmailAsync(mailHeader, from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, null);
                 }
 
                 var response = new
