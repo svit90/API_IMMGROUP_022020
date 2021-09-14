@@ -783,10 +783,10 @@ namespace api.immgroup.com.Controllers
         }
 
         [Produces("application/json")]
-        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/{office}")]
+        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/{office}/{flag1}/{flag2}")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty, string office)
+        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty, string office, string flag1, string flag2)
         {
             try
             {
@@ -798,7 +798,7 @@ namespace api.immgroup.com.Controllers
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto , @P_Area = office }, commandType: CommandType.StoredProcedure).ToList();
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto , @P_Area = office, @P_Flag1 = flag1, @P_Flag2 = flag2 }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
             }
@@ -1205,7 +1205,7 @@ namespace api.immgroup.com.Controllers
         {
             dynamic para = JObject.Parse(body.ToString());
             Function fc = new Function();
-            int _s = 1;
+            int _s = 1;string _flag = "";
             string _e = para.rq_email;
             string _p = para.rq_phone;
             string _n = para.rq_cusname;
@@ -1218,6 +1218,7 @@ namespace api.immgroup.com.Controllers
 
                 if (Cusid == "" || Cusid == null)
                 {
+                    _flag = "new";
                     string str = "";
                     string[] AppEmail = null;
                     str = _e.ToString();
@@ -1294,7 +1295,14 @@ namespace api.immgroup.com.Controllers
                     sql += " N'" + para.rq_getLink + "', ";
                     sql += " '1', ";
                     sql += " N'" + para.rq_area + "', ";
-                    sql += " N'" + para.rq_info + "', ";
+                    if(_flag == "new")
+                    {
+                        sql += " N'', ";
+                    }
+                    else
+                    {
+                        sql += " N'" + para.rq_info + "', ";
+                    }                   
                     sql += " GETDATE());";
 
                     await connection.ExecuteAsync(sql, commandType: CommandType.Text);
