@@ -14,8 +14,8 @@ using api.immgroup.com;
 using api.immgroup.com.Models;
 using Microsoft.AspNetCore.Cors;
 using Library;
-using JsonResult = Library.JsonResult;
 using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace api.immgroup.com.Controllers
 {
@@ -138,7 +138,7 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-       
+
         #region SEARCH BAR ON TOP
         /*FUNCTION API FOR SEARCH BAR START*/
         [Produces("application/json")]
@@ -149,10 +149,46 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
-                
+
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_All_Cus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("om/search/{key}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetOmtopic(string key)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[OM_Search_Topic]";
 
                     var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
 
@@ -498,7 +534,7 @@ namespace api.immgroup.com.Controllers
             }
         }
         #endregion
-               
+
         #region Notification
         [Produces("application/json")]
         [Route("crm/get/notification/{mode}/{rowid}")]
@@ -512,6 +548,33 @@ namespace api.immgroup.com.Controllers
                 {
                     const string sql = "[dbo].[_0620_Workbase_GetNotification_ByMode]";
                     var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Token = rowid }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/noticenter/{mode}/{rowid}/{cur}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetConversation_ByStaff(string mode, string rowid, string from, string cur)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetNotification_ByMode_LoadMore]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Token = rowid, @P_CurId = cur }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
             }
@@ -676,21 +739,66 @@ namespace api.immgroup.com.Controllers
         #endregion
 
         #region Export Khách và Report
-
         [Produces("application/json")]
-        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
+        [Route("crm/get/report/{mode}/contact/chart/all/week")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty)
+        public IActionResult GetcContactChartAllWeek(string mode)
         {
             try
             {
+                string sql = "";
+                if (mode == "c")
+                {
+                    sql = "[dbo].[REPORT_CUS_CONTACT_ALL_WEEK_COUNT]";
+                }
+                if (mode == "s")
+                {
+                    sql = "[dbo].[REPORT_STAFF_CONTACT_ALL_WEEK_COUNT]";
+                }
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {    
+
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        Version = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get/report/digital/{mode}/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/{office}/{flag1}/{flag2}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetDIGTotalCountEveryReport(string mode, string fd, string fm, string fy, string td, string tm, string ty, string office, string flag1, string flag2)
+        {
+            try
+            {
+                if (office == "all") { office = ""; }
+                if (office == "hanoi"){office = "Hà Nội";}
+                if (office == "hochiminh") { office = "Hồ Chí Minh"; }
                 string dfrom = fd + "/" + fm + "/" + fy;
                 string dto = td + "/" + tm + "/" + ty;
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
-                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto }, commandType: CommandType.StoredProcedure).ToList();
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Mode = mode, @P_Begindate = dfrom, @P_Enddate = dto , @P_Area = office, @P_Flag1 = flag1, @P_Flag2 = flag2 }, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
             }
@@ -705,7 +813,7 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(response);
             }
         }
-                
+
         [Route("crm/get/export/customer/itemquery")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -716,6 +824,7 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
+                Function Lib = new Function();
                 Product = Lib.SplitAndAddSeparator(Product);
                 ProfileStatus = Lib.SplitAndAddSeparator(ProfileStatus);
                 SeriousRate = Lib.SplitAndAddSeparator(SeriousRate);
@@ -754,7 +863,7 @@ namespace api.immgroup.com.Controllers
                     var items = db.Query<dynamic>(sql: _sql,
                         commandType: CommandType.Text).ToList();
                     return new OkObjectResult(items);
-                }               
+                }
             }
             catch (Exception e)
             {
@@ -769,15 +878,20 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-        [Route("crm/get/export/customer/staff/{id}/following")]
+        [Route("crm/get/export/customer/staff/{id}/following/{mode}")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]      
-        public IActionResult ExportListStaffFollowing(string id)
+        [AllowAnonymous]
+        public IActionResult ExportListStaffFollowing(string id, string mode)
         {
             try
             {
                 string _sql = "_0620_Workbase_Get_Customer_Following_ByStaffId";
+                if (mode == "lite")
+                {
+                    _sql = "_0620_Workbase_Get_Customer_Following_ByStaffId_Lite";
+                }               
+                
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     var items = db.Query<dynamic>(sql: _sql, param: new { @P_STAFF = id },
@@ -838,7 +952,7 @@ namespace api.immgroup.com.Controllers
                 string _sql = "_0620_Workbase_Check_SaleHandle_BlockedCus";
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_CusId = id, @P_StaffId =  sale },
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_CusId = id, @P_StaffId = sale },
                         commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
@@ -849,6 +963,42 @@ namespace api.immgroup.com.Controllers
                 {
                     ok = false,
                     message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("om/get/memo/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetOmtopicVersion(int id)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[OM_Get_Topic_Version_ByVersionId]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @VerID = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        Version = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
                     error = e.Message
                 };
 
@@ -885,7 +1035,7 @@ namespace api.immgroup.com.Controllers
                 };
 
                 return new BadRequestObjectResult(response);
-            }           
+            }
         }
 
         [Produces("application/json")]
@@ -944,52 +1094,355 @@ namespace api.immgroup.com.Controllers
         }
         #endregion
 
-        #region FUNCTION API EXT
+        #region FUNCTION API EXC
 
         [Produces("application/json")]
         [Route("crm/func/todo/addnew")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public async Task<IActionResult> AddNewTodoList([FromBody] TodoListModel data)
+        [HttpPost]
+        public IActionResult AddNewTodoList([FromBody] TodoListModel data)
+        {
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    string RetVal = "";
+                    string Query = "[dbo].[_0620_Workbase_TodoList_AddNew]";
+                    using (DBHelper.cmd = new SqlCommand(Query, connection))
+                    {
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Owner", data.Owner);
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Todo", data.TaskDetails);
+                        DBHelper.cmd.Parameters.AddWithValue("@P_Rate", data.Rate);
+                        DBHelper.cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
+                        while (DBHelper.sdr.Read())
+                        {
+                            RetVal = DBHelper.sdr["TODO_ID"].ToString();
+                            break;
+                        }
+                        DBHelper.cmd.Parameters.Clear();
+                        DBHelper.sdr.Close();                       
+                        var response = new
+                        {
+                            TODO_ID = RetVal,
+                        };
+                        return new OkObjectResult(response);
+                    }
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }           
+        }
+
+
+        [HttpPost("crm/func/todolist/addnew")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> NewTodoList([FromBody] dynamic body)
+        {
+            try
+            {                
+                
+                //var authorizationHeader = Request.Headers["Authorization"].First();
+                //var key = authorizationHeader.Split(' ')[1];
+                //if (string.IsNullOrEmpty(key))
+                //{
+                //    return new BadRequestResult();
+                //}
+
+                //if (ValidateSecret(key) == false)
+                //{
+                //    return new BadRequestResult();
+                //}
+                string sql = "[dbo].[_0620_Workbase_AddNew_Todolist]";
+                dynamic para = JObject.Parse(body.ToString());
+                int Owner = para.Owner;
+                string TaskDetails = para.TaskDetails;
+                int Rate = para.Rate;
+                var dp = new DynamicParameters();
+                dp.Add("@P_Owner", Owner);
+                dp.Add("@P_Todo", TaskDetails);
+                dp.Add("@P_Rate", Rate);
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var rowAffected = await db.ExecuteAsync(sql, dp, commandType: CommandType.StoredProcedure);
+                    // RETURN
+                    var response = new { ok = true, rowAffected };
+                    return new OkObjectResult(response);
+                }
+
+            }
+            catch (Exception error)
+            {
+                var response = new { ok = false, error, body };
+                return BadRequest(response);
+            }
+        }
+
+        [HttpPost("crm/func/info/f/web/submit")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] dynamic body)
+        {
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            int _s = 1;string _flag = "";
+            string _e = para.rq_email;
+            string _p = para.rq_phone;
+            string _n = para.rq_cusname;
+            string Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'", "CUS_ID");
+            string sql = "";
+            if (_e != "" || _p != "")
+            {
+
+                if (para.rq_sex != "Nam") { _s = 0; }
+
+                if (Cusid == "" || Cusid == null)
+                {
+                    _flag = "new";
+                    string str = "";
+                    string[] AppEmail = null;
+                    str = _e.ToString();
+                    char[] splitchar = { ';' };
+                    AppEmail = str.Split(splitchar);
+                    string pass = fc.GetUniqueKey(8);
+                    sql += "INSERT INTO M_CUSTOMER";
+                    sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+                    sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+                    sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+                    sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+                    sql += " VALUES";
+                    sql += " ( ";
+                    sql += "'',";
+                    sql += "N'" + _n + "',";
+                    sql += "N'" + fc.ConvertName(_n) + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "N'" + _p + "',";
+                    sql += "N'" + DateTime.Now.ToString() + "',";
+                    sql += "GETDATE(),";
+                    sql += _s + ",";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+                    sql += "'CR01',";
+                    sql += "'',";
+                    sql += "1,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "GETDATE(),";
+                    sql += "GETDATE(),";
+                    sql += "'" + pass + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "'" + AppEmail[0] + "',";
+                    sql += "'0',";
+                    sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
+                    sql += "N'" + _p + "',";
+                    sql += "'',";
+                    sql += "(select NEWID()),";
+                    sql += "'0','0','0','0','/img/avatar/cus_default_avatar.png',0,0,''";
+                    sql += " ); ";
+                    DBHelper.ExecuteQuery(sql);
+                    Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
+                }
+            }
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql += " CUS_ID, ";
+                    sql += " S_WEB_CONTENT, ";
+                    sql += " S_WEB_TITLE, ";
+                    sql += " S_WEB_SOURCE, ";
+                    sql += " S_WEB_LINK, ";
+                    sql += " FLAG_ACTIVE, ";
+                    sql += " S_WEB_NOTE_1, ";
+                    sql += " S__WEB_NOTE_2, ";
+                    sql += " S_WEB_DATE";
+                    sql += " ) ";
+                    sql += " VALUES ( ";
+                    sql += "'" + Cusid + "', ";
+                    sql += " N'" + para.rq_content + "', ";
+                    sql += " N'" + para.rq_titleProduct + "', ";
+                    sql += " N'" + para.rq_utmSource + "', ";
+                    sql += " N'" + para.rq_getLink + "', ";
+                    sql += " '1', ";
+                    sql += " N'" + para.rq_area + "', ";
+                    if(_flag == "new")
+                    {
+                        sql += " N'', ";
+                    }
+                    else
+                    {
+                        sql += " N'" + para.rq_info + "', ";
+                    }                   
+                    sql += " GETDATE());";
+
+                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    var response = new { ok = true, message = "Success", error ="Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }           
+        }
+
+        private bool ValidateSecret(string value)
+        {
+            return value.Equals("12C1F7EF9AC8E288FBC2177B7F54D", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void CheckAndAddCus(string _e, string _p , string _n, int _s)
+        {
+            string Cusid = "";
+            DataTable dt = new DataTable();
+            Function fc = new Function();
+            Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'","CUS_ID");
+          
+            if (Cusid == "" || Cusid == null) {           
+                string str = "";
+                string[] AppEmail = null;
+                str = _e.ToString();
+                char[] splitchar = { ';' };
+                AppEmail = str.Split(splitchar);
+                string pass = fc.GetUniqueKey(8);
+                string _sql = "INSERT INTO M_CUSTOMER";
+                _sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+                _sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+                _sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+                _sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+                _sql += " VALUES";
+                _sql += " ( ";
+                _sql += "'',";
+                _sql += "N'" + _n + "',";
+                _sql += "N'" + fc.ConvertName(_n) + "',";
+                _sql += "N'" + _e + "',";
+                _sql += "N'" + _p + "',";
+                _sql += "N'" + DateTime.Now.ToString() + "',";
+                _sql += "N'" + DateTime.Now + "',";
+                _sql += _s + ",";
+                _sql += "0,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+                _sql += "'CR01',";
+                _sql += "'',";
+                _sql += "1,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "0,";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'',";
+                _sql += "'" +  pass + "',";
+                _sql += "'" + AppEmail[0] + "',";
+                _sql += " ) ";
+                
+            }
+        }
+        #endregion
+
+        #region EmailHelper
+        [EnableCors("WebPolicy")]
+        [HttpPost("crm/func/sendmail-async")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        public IActionResult SendMailAsync([FromBody] dynamic data)
         {
             try
             {
-                using (var db = new SqlConnection(DBHelper.connectionString))
+                EmailHelper emh = new EmailHelper();
+                // SEND EMAIL
+                // TODO: 
+                //if (data.CustomerId != 12419)
                 {
-                    const string sql = "[dbo].[_0620_Workbase_TodoList_AddNew]";
-                    var items = db.Query<dynamic>(sql: sql,
-                        param: new
-                        {
-                            @Owner = data.Owner,
-                            @TaskDetails = data.TaskDetails,
-                            @Rate = data.Rate,
-                            @Active = data.Active
-                        },
-                        commandType: CommandType.StoredProcedure).ToList();
                     
-                    // Response
-                    var response = new
+                    var mailHeader = data.MailHeader.Value;
+                    var senderEmail = data.SenderEmail.Value;
+                    var senderPassword = data.SenderPassword.Value;
+                    var toEmail = data.ToEmail.Value;
+                    var ccEmail = data.CcEmail.Value;
+                    var bccEmail = data.BccEmail.Value;
+                    var subject = data.Subject.Value;
+                    var bodyEmail = data.BodyEmail.Value;
+
+                    var from = "crm@immgroup.com";
+                    var password = "duyhhwbuverzqkac";
+
+                    if (senderEmail != "" && senderEmail != from)
                     {
-                        ok = true,
-                        description = "004",
-                    };
-                    return new OkObjectResult(response);
-                    
+                        from = senderEmail;
+                        password = senderPassword;
+                    }
+
+                    //SEND EMAIL
+                    //EmailHelper.Send(from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, System.Net.Mail.MailPriority.High, null, mailHeader);
+                    emh.SendEmailAsync(mailHeader, from, password, toEmail, ccEmail, bccEmail, subject, bodyEmail, null);
                 }
+
+                var response = new
+                {
+                    status = "OK",
+                    message = "Email Send",
+                };
+
+                return new OkObjectResult(response);
             }
             catch (Exception e)
             {
                 var response = new
                 {
-                    ok = false,
-                    message = "Error",
-                    error = e.Message
+                    status = "Error",
+                    message = e.Message
                 };
 
-                return new BadRequestObjectResult(response);
+                return BadRequest(response);
             }
         }
-
         #endregion
     }
 }
