@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <StartupObject></StartupObject>
     <OutputType>Exe</OutputType>
+    <UserSecretsId>642050de-6693-42b0-9b24-2198d6110fc0</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,12 +40,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\AutoSyncEmail\Library\Library.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Library">
-      <HintPath>..\..\WorkbaseImm_MVC\Library\obj\Release\Library.dll</HintPath>
+      <HintPath>..\..\WorkbaseImm_MVC\Library\obj\Debug\Library.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

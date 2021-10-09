@@ -185,7 +185,8 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
-
+                Function fc = new Function();
+                key = fc.ConvertName(key);
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[OM_Search_Topic]";
@@ -213,6 +214,32 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [HttpPost("om/search-memo/")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> OmSearchMemo([FromBody] dynamic body)
+        {
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            string _key = para._key;
+            _key = fc.ConvertName(_key);
+            using (var db = new SqlConnection(DBHelper.connectionString))
+            {
+                const string sql = "[dbo].[OM_Search_Topic]";
+
+                var items = db.Query<dynamic>(sql: sql, param: new { @Key = _key }, commandType: CommandType.StoredProcedure).ToList();
+
+                var response = new
+                {
+                    ok = true,
+                    customers = items,
+                };
+
+                return new OkObjectResult(response);
+            }
+        }
         /*FUNCTION API FOR SEARCH BAR END*/
         #endregion
 
