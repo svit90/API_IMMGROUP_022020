@@ -187,11 +187,12 @@ namespace api.immgroup.com.Controllers
             {
                 Function fc = new Function();
                 key = fc.ConvertName(key);
+                string _dataFolder ="0";
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     const string sql = "[dbo].[OM_Search_Topic]";
 
-                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key, @Folder = _dataFolder }, commandType: CommandType.StoredProcedure).ToList();
 
                     var response = new
                     {
@@ -224,12 +225,21 @@ namespace api.immgroup.com.Controllers
             dynamic para = JObject.Parse(body.ToString());
             Function fc = new Function();
             string _key = para._key;
-            _key = fc.ConvertName(_key);
+            string _dataFolder = para._dataFolder;
+            if (_key != "" && _key != null)
+            {
+                _key = fc.ConvertName(_key);
+            }
+            else
+            {
+                _key = "searchOMall";
+            }
+            
             using (var db = new SqlConnection(DBHelper.connectionString))
             {
                 const string sql = "[dbo].[OM_Search_Topic]";
 
-                var items = db.Query<dynamic>(sql: sql, param: new { @Key = _key }, commandType: CommandType.StoredProcedure).ToList();
+                var items = db.Query<dynamic>(sql: sql, param: new { @Key = _key, @Folder = _dataFolder }, commandType: CommandType.StoredProcedure).ToList();
 
                 var response = new
                 {
@@ -1019,6 +1029,68 @@ namespace api.immgroup.com.Controllers
                     };
 
                     return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+        #endregion
+
+        #region PRM API
+       
+        [Produces("application/json")]
+        [Route("prm/get-bank-list")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetAllBank()
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[PRM_Get_Bank_List]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Para = "" },  commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("prm/get-bank-name/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetBankName(string id)
+        {
+            try
+            {
+                if (id == "" || id == null)
+                {
+                    id = "";
+                }
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[PRM_Get_Bank_List]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Para = id }, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
                 }
             }
             catch (Exception e)
