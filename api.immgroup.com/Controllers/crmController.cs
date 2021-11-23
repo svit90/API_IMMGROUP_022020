@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Cors;
 using Library;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
+using System.Net;
 
 namespace api.immgroup.com.Controllers
 {
@@ -1305,11 +1306,14 @@ namespace api.immgroup.com.Controllers
             dynamic para = JObject.Parse(body.ToString());
             Function fc = new Function();
             int _s = 1;string _flag = "";
+            string utm_source  = para.rq_utmSource;
             string _e = para.rq_email;
             string _p = para.rq_phone;
             string _n = para.rq_cusname;
             string Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'", "CUS_ID");
-            string sql = "";
+            string sql = "";            
+            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
+
             if (_e != "" || _p != "")
             {
 
@@ -1369,7 +1373,8 @@ namespace api.immgroup.com.Controllers
                     DBHelper.ExecuteQuery(sql);
                     Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
                 }
-            }
+            }            
+           
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
@@ -1543,5 +1548,7 @@ namespace api.immgroup.com.Controllers
             }
         }
         #endregion
+
+      
     }
 }
