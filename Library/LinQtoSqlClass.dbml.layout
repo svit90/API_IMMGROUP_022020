@@ -1,0 +1,378 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 30, 33.25" name="LinQtoSqlClass">
+  <DataContextMoniker Name="/LinQtoSqlClassDataContext" />
+  <nestedChildShapes>
+    <classShape Id="af3068d3-00a2-4f4d-b4fd-ebd422f2b447" absoluteBounds="0.75, 0.75, 2, 2.7324039713541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ACTION_HISTORY" />
+      <nestedChildShapes>
+        <elementListCompartment Id="4abc532c-0958-4dd7-85a3-3915d4c6d0c9" absoluteBounds="0.765, 1.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="e67e82ed-60e0-4e84-864d-8b55e016feff" absoluteBounds="3.75, 0.75, 2, 1.5785953776041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ACTIVITY" />
+      <nestedChildShapes>
+        <elementListCompartment Id="9ee62860-7d11-484b-ac8a-abd293d725ae" absoluteBounds="3.765, 1.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="7f2a4a24-06d3-46ec-925e-21fc3ee02d23" absoluteBounds="3.75, 3.75, 2, 2.9247054036458326">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ASSET_OTHER" />
+      <nestedChildShapes>
+        <elementListCompartment Id="9b4e8ca3-8bda-45ea-8d6f-8f1f6b3bc3c7" absoluteBounds="3.765, 4.21, 1.9700000000000002, 2.364705403645833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="70a2406d-3469-4f70-be6d-a0467a2cdd10" absoluteBounds="6.75, 0.75, 2, 2.9247054036458326">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ASSIGN" />
+      <nestedChildShapes>
+        <elementListCompartment Id="b2a087d9-91dd-417e-b196-0d8e62e1ab30" absoluteBounds="6.765, 1.21, 1.9700000000000002, 2.364705403645833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="60d2ce45-54b6-4bf7-8525-636198753523" absoluteBounds="6.75, 4.75, 2, 3.1170068359375005">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ATTACH" />
+      <nestedChildShapes>
+        <elementListCompartment Id="eb9e1608-af2c-47e9-9d84-b811acbf2e61" absoluteBounds="6.765, 5.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="a86f26a0-9c41-47f7-aff6-693d172d5a61" absoluteBounds="0.75, 7.75, 2, 3.1170068359375014">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ATTACH_BK" />
+      <nestedChildShapes>
+        <elementListCompartment Id="f5fd71a5-b866-41b5-944c-03f50533066c" absoluteBounds="0.765, 8.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="0bb9a673-42ef-48c2-9b92-7f57ba08d441" absoluteBounds="3.75, 8.75, 2, 3.8862125651041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_AUTOMATION_Message" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d262f601-2313-44d2-8f8a-b18e45e2ef33" absoluteBounds="3.765, 9.21, 1.9700000000000002, 3.3262125651041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="700aafab-7163-4ae2-b195-11f3f3926a38" absoluteBounds="6.75, 8.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_BLOCK_STAFF_FL_CUS" />
+      <nestedChildShapes>
+        <elementListCompartment Id="2f9339dc-e69b-4109-b86b-0aff0747b6f2" absoluteBounds="6.765, 9.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="c112ecbc-7b6a-41e1-a191-393f757698ae" absoluteBounds="9.75, 0.75, 2, 2.3478011067708335">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_BLOCK_TEAM_NOT_FLW" />
+      <nestedChildShapes>
+        <elementListCompartment Id="ae739c46-de3b-40a7-8527-f4e8ff03a26c" absoluteBounds="9.765, 1.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="72b637e6-c245-4df0-bc0a-94b25208c369" absoluteBounds="9.75, 4.75, 2, 3.8862125651041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_CALENDAR" />
+      <nestedChildShapes>
+        <elementListCompartment Id="5cf159e3-cc51-4d4d-ae79-dce44c67a7cb" absoluteBounds="9.765, 5.21, 1.9700000000000002, 3.3262125651041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="9b4ac719-9ff2-4c42-8eba-bca8ce67fc43" absoluteBounds="9.75, 9.75, 2, 2.5401025390624987">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_CLASSIFICATION" />
+      <nestedChildShapes>
+        <elementListCompartment Id="8e0c3a88-c9ce-41c7-aa76-9d9f59d99187" absoluteBounds="9.765, 10.21, 1.9700000000000002, 1.9801025390625" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="f8dbc75c-2e61-465e-a307-14b5dcbb55b9" absoluteBounds="12.75, 0.75, 2, 5.0400211588541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_COMPANY" />
+      <nestedChildShapes>
+        <elementListCompartment Id="018f5c99-6a25-4a68-a218-0090ad9901df" absoluteBounds="12.765, 1.21, 1.9700000000000002, 4.4800211588541661" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="628e879c-282b-4b1d-9b94-57c985501acb" absoluteBounds="12.75, 6.75, 2, 1.1939925130208344">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_CONTACT_EMAIL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="2f125ff1-9f0b-4a0c-9907-d4d4cef328e8" absoluteBounds="12.765, 7.21, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="f002075a-05b5-4899-81e2-5201a9aab563" absoluteBounds="12.75, 8.75, 2, 2.9247054036458309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_CUS_RELATIVE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="debe3edc-c57c-45b2-a235-085550352b11" absoluteBounds="12.765, 9.21, 1.9700000000000002, 2.364705403645833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="10566126-874d-4baa-adc0-1c07dcd47dcb" absoluteBounds="12.75, 12.75, 2, 8.69374837239583">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_CUSTOMER" />
+      <nestedChildShapes>
+        <elementListCompartment Id="85d411c5-f74e-4864-abd6-ac31961e7899" absoluteBounds="12.765, 13.21, 1.9700000000000002, 8.1337483723958321" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="2475aa4c-6911-43c6-9f9f-b3770c65594a" absoluteBounds="0.75, 13.75, 2, 3.1170068359375023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_DEVICE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="6b88cffb-5cd6-47a6-83e7-2b5a06c90128" absoluteBounds="0.765, 14.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="8b5b385e-e785-4a39-95ed-5655d259259f" absoluteBounds="3.75, 13.75, 2, 4.0785139973958309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_DIGITAL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="6a6b08b6-b790-4b6b-baf5-61fadb790c61" absoluteBounds="3.765, 14.21, 1.9700000000000002, 3.518513997395833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="b1392a13-58f6-4d69-8480-5641c011da47" absoluteBounds="6.75, 13.75, 2, 3.1170068359375023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_EDUCATION" />
+      <nestedChildShapes>
+        <elementListCompartment Id="f42860f3-6abf-4248-aa6a-d2585a8b1bc3" absoluteBounds="6.765, 14.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="5e0a152b-e909-481d-b6c8-c4dd67a1eaad" absoluteBounds="15.75, 0.75, 2, 4.2708154296874987">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_EMAIL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="f3de83a4-a038-4d97-8c32-f781056e7618" absoluteBounds="15.765, 1.21, 1.9700000000000002, 3.7108154296875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="08f3a4b1-fee0-4cc2-af43-6b4cee66a4fa" absoluteBounds="15.75, 6.75, 2, 1.1939925130208344">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ERROR" />
+      <nestedChildShapes>
+        <elementListCompartment Id="ffd25dad-cc59-4ae0-8e55-63e6e18f5683" absoluteBounds="15.765, 7.21, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="c32fee5f-8821-4b27-aaa3-db6962dc842d" absoluteBounds="15.75, 8.75, 2, 2.9247054036458309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_EVENT" />
+      <nestedChildShapes>
+        <elementListCompartment Id="e82314f3-db37-4ae8-8172-0d3b01f0d396" absoluteBounds="15.765, 9.21, 1.9700000000000002, 2.364705403645833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d3ed5162-9839-4b48-aeb4-b86f5a60b401" absoluteBounds="15.75, 12.75, 2, 3.1170068359375023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_EXPERIENCE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="a2586222-040d-447a-92f3-0cfe9499e45a" absoluteBounds="15.765, 13.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="862647ff-def2-4210-82de-f773a2bea062" absoluteBounds="15.75, 16.75, 2, 2.3478011067708309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_FEE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="5c571727-c264-435a-b3f0-0503a9fc8dce" absoluteBounds="15.765, 17.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="da61ab9c-701b-47c0-ab8c-694a1535c2f2" absoluteBounds="6.75, 17.75, 2, 3.3093082682291666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_FEEDBACK" />
+      <nestedChildShapes>
+        <elementListCompartment Id="541adbbc-cc27-40ab-bda4-4da8816f9876" absoluteBounds="6.765, 18.21, 1.9700000000000002, 2.7493082682291665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="ece52f3c-af53-4819-897f-f9a9298bc4f5" absoluteBounds="18.75, 0.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_FOLDER_PERMISS" />
+      <nestedChildShapes>
+        <elementListCompartment Id="b56679cd-970b-49d7-a4f1-ec02e9d94ced" absoluteBounds="18.765, 1.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="74b451c4-ef4d-4cde-b015-8e8e553d1c0f" absoluteBounds="0.75, 18.75, 2, 1.9631982421875023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_FOLLOW_LONGTIME_CUS" />
+      <nestedChildShapes>
+        <elementListCompartment Id="ca60e5b8-e3ed-43a8-af27-673c019febf8" absoluteBounds="0.765, 19.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="eee0c1ad-7959-4c13-a8f2-136b65c57fbe" absoluteBounds="18.75, 3.75, 2, 1.5785953776041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_FUNC_ACCESS" />
+      <nestedChildShapes>
+        <elementListCompartment Id="1d2207c9-769b-4256-88cc-13989b8220fc" absoluteBounds="18.765, 4.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="530422b7-3eba-42a3-96b0-89047fef1d40" absoluteBounds="18.75, 6.75, 2, 1.1939925130208344">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_GUEST" />
+      <nestedChildShapes>
+        <elementListCompartment Id="3f716c56-6b3a-4c6e-81b3-0245b426a13c" absoluteBounds="18.765, 7.21, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="5b14499a-ed42-42cb-a331-3bc405a51707" absoluteBounds="18.75, 8.75, 2, 2.3478011067708344">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_HIS_CUS" />
+      <nestedChildShapes>
+        <elementListCompartment Id="6207ae26-a2a5-4f78-81e9-6f34c6bda2d4" absoluteBounds="18.765, 9.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d7d535b3-5d64-4f55-9066-ed41f3815887" absoluteBounds="18.75, 12.75, 2, 2.5401025390624987">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_HIS_DIGITAL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="c515baa4-8507-42fa-ba80-9521262e8ede" absoluteBounds="18.765, 13.21, 1.9700000000000002, 1.9801025390625" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="ad7b22dc-518a-49f2-a7f5-dbf80a1fda6a" absoluteBounds="18.75, 16.75, 2, 1.9631982421875023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_INFO" />
+      <nestedChildShapes>
+        <elementListCompartment Id="bdebc69f-6a73-488f-999d-e8e00ea3bf8d" absoluteBounds="18.765, 17.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="e0a22f59-47f5-4fe4-9888-c18ee5380cdb" absoluteBounds="18.75, 19.75, 2, 4.4631168619791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_MARKETING" />
+      <nestedChildShapes>
+        <elementListCompartment Id="763d9455-fa35-450e-8871-d55b0e95337c" absoluteBounds="18.765, 20.21, 1.9700000000000002, 3.903116861979167" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="14966d01-cbb9-4695-9aab-4edeca624848" absoluteBounds="21.75, 0.75, 2, 1.9631982421875003">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_MENU" />
+      <nestedChildShapes>
+        <elementListCompartment Id="c819f35c-7b67-401c-ad96-c8eaf07b530c" absoluteBounds="21.765, 1.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="dc6009b5-1e2b-43ae-96bb-4a404605e037" absoluteBounds="0.75, 21.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_MESSAGE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="6d539e0c-a25e-484b-9701-7d83e0b5d690" absoluteBounds="0.765, 22.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="1584c8aa-75cf-4b6e-a237-3e10dbf7fecd" absoluteBounds="21.75, 3.75, 2, 1.193992513020834">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_NOTIFICATION_CUSTOMER" />
+      <nestedChildShapes>
+        <elementListCompartment Id="30332e86-7cbd-4b38-8973-68227800ebe6" absoluteBounds="21.765, 4.21, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="1803a4d0-4bf0-4b38-bee1-129aa752f38b" absoluteBounds="21.75, 5.75, 2, 2.5401025390624996">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_NOTIFICATION_LOG" />
+      <nestedChildShapes>
+        <elementListCompartment Id="63e6fc3f-43c6-4c46-9a93-f4e081e61856" absoluteBounds="21.765, 6.21, 1.9700000000000002, 1.9801025390625" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d18ff760-473b-434c-b4ca-bafed605131e" absoluteBounds="21.75, 9.75, 2, 2.7324039713541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_NOTIFICATION_MESSAGE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="b3f81367-91f6-434d-b700-b36ebcb0ea37" absoluteBounds="21.765, 10.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="4b376d3c-1ad0-4cbe-8e11-b5d12566edb0" absoluteBounds="21.75, 13.75, 2, 1.3862939453124987">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_NOTIFICATION_SEGMENT" />
+      <nestedChildShapes>
+        <elementListCompartment Id="836f6f19-fbfd-434c-91f6-a8ec2307c165" absoluteBounds="21.765, 14.21, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="b5df566b-85fc-4910-8831-45c9c2813be7" absoluteBounds="21.75, 16.75, 2, 2.7324039713541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_ORDER" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d72a0ec5-4424-4ec2-a1e2-f4c2bda838be" absoluteBounds="21.765, 17.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="d14247cc-2631-415a-a897-f536b1b7717f" absoluteBounds="21.75, 20.75, 2, 4.2708154296875023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PARTNER" />
+      <nestedChildShapes>
+        <elementListCompartment Id="afc44eb5-0ea6-4797-a309-1470d4aa565d" absoluteBounds="21.765, 21.21, 1.9700000000000002, 3.7108154296875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="0cacfeca-c820-4ce8-bc44-19c11c87006f" absoluteBounds="3.75, 22.75, 2, 2.3478011067708309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PARTNER_WORK" />
+      <nestedChildShapes>
+        <elementListCompartment Id="46de5043-3785-4cad-b9b3-e0f06a7a1027" absoluteBounds="3.765, 23.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="42e74f73-21bf-49a2-9f4d-382b61aea13d" absoluteBounds="6.75, 22.75, 2, 1.3862939453125023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PROCESS_SCAN_HI" />
+      <nestedChildShapes>
+        <elementListCompartment Id="9ee258ba-42c0-4412-a848-64675e7a42cc" absoluteBounds="6.765, 23.21, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="78e431c5-9365-4e36-9c66-2a58cf21a8f1" absoluteBounds="9.75, 22.75, 2, 2.7324039713541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PROCESS_STAGE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="e409c16b-fc67-4474-a68b-5e1376eb90a8" absoluteBounds="9.765, 23.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="44795118-57f1-4346-9d1e-bc95476a13df" absoluteBounds="12.75, 22.75, 2, 2.7324039713541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PROCESS_STAGE_DETAIL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="06f9fd2f-98e3-468d-9ac7-57040cc55b5c" absoluteBounds="12.765, 23.21, 1.9700000000000002, 2.1724039713541665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="0d5d726a-5b72-4278-8b59-38466364a279" absoluteBounds="24.75, 0.75, 2, 3.3093082682291666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_PRODUCT" />
+      <nestedChildShapes>
+        <elementListCompartment Id="4e51db50-61e3-4cb5-ba8a-56b459f68302" absoluteBounds="24.765, 1.21, 1.9700000000000002, 2.7493082682291665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="8bacfaf4-415f-4b7d-89e1-9b6b2469fe14" absoluteBounds="24.75, 5.75, 2, 5.0400211588541666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_REALESTATE" />
+      <nestedChildShapes>
+        <elementListCompartment Id="58eee282-853b-4d27-b604-f85ae1c89084" absoluteBounds="24.765, 6.21, 1.9700000000000002, 4.4800211588541661" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="5e11f75b-7916-4d50-9e9d-0746b732c01e" absoluteBounds="24.75, 11.75, 2, 1.5785953776041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_REBACK_CUS_HI" />
+      <nestedChildShapes>
+        <elementListCompartment Id="84c26220-0151-4a60-ae97-917a5c505a78" absoluteBounds="24.765, 12.21, 1.9700000000000002, 1.0185953776041665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="097ea92e-7480-432f-a08c-2042fbd23a87" absoluteBounds="24.75, 14.75, 2, 1.9631982421875005">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_RELASIONSHIP" />
+      <nestedChildShapes>
+        <elementListCompartment Id="7ea5ed32-02e0-4563-a905-39a7fdcf57b5" absoluteBounds="24.765, 15.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="cb57b4df-d452-4bfe-afdb-6c7175dbb83a" absoluteBounds="24.75, 17.75, 2, 3.3093082682291666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_SALE_LIST" />
+      <nestedChildShapes>
+        <elementListCompartment Id="b25a860c-c05c-4a60-8456-d1a79dcb1958" absoluteBounds="24.765, 18.21, 1.9700000000000002, 2.7493082682291665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="f9c1a2e6-7da7-4b20-ae23-6483d606f1e6" absoluteBounds="24.75, 22.75, 2, 3.3093082682291666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_SALE_LIST_TMP" />
+      <nestedChildShapes>
+        <elementListCompartment Id="1e4a429f-79eb-4244-ace6-5b43ce61d1ab" absoluteBounds="24.765, 23.21, 1.9700000000000002, 2.7493082682291665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="8fdce949-0396-4384-9d24-64f40c0267d0" absoluteBounds="15.75, 25.75, 2, 1.3862939453125023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_SQL_STR" />
+      <nestedChildShapes>
+        <elementListCompartment Id="50ca6c98-a539-40b3-a450-cf79a41ab38e" absoluteBounds="15.765, 26.21, 1.9700000000000002, 0.8262939453125" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="5a4fb8ea-9b89-4638-996e-35d909d22474" absoluteBounds="0.75, 26.75, 2, 6.1938297526041666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_STAFF" />
+      <nestedChildShapes>
+        <elementListCompartment Id="3aab1982-833a-40de-b7f5-29eb2778c8ef" absoluteBounds="0.765, 27.21, 1.9700000000000002, 5.6338297526041661" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="759a106a-0da1-4b4f-8e19-f2c6dfcb3f08" absoluteBounds="3.75, 26.75, 2, 4.8477197265625023">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_SURVEY" />
+      <nestedChildShapes>
+        <elementListCompartment Id="5c544805-43b8-4c3a-af1a-76935510636f" absoluteBounds="3.765, 27.21, 1.9700000000000002, 4.2877197265625" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="34618192-613f-4b9a-b11f-e68ee91f5398" absoluteBounds="6.75, 26.75, 2, 2.3478011067708309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TEAM" />
+      <nestedChildShapes>
+        <elementListCompartment Id="1182d128-868f-4ab7-8fba-c11a60acb7e5" absoluteBounds="6.765, 27.21, 1.9700000000000002, 1.7878011067708335" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="8ad4f3df-6661-409a-92f6-be66bda2c70c" absoluteBounds="9.75, 26.75, 2, 5.8092268880208309">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TEMP_DATA" />
+      <nestedChildShapes>
+        <elementListCompartment Id="6e1058a7-9cbf-41a5-a619-f342d16ad80c" absoluteBounds="9.765, 27.21, 1.9700000000000002, 5.249226888020833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="7e46e27f-3eb9-4192-98f6-321f382ca1f9" absoluteBounds="18.75, 26.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TEMP_EXP" />
+      <nestedChildShapes>
+        <elementListCompartment Id="16eebaf4-341e-4627-aa34-a56356cdd273" absoluteBounds="18.765, 27.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="17946189-845c-4904-a9f8-ffaa77726b68" absoluteBounds="27.75, 0.75, 2, 2.9247054036458326">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TEMPLATE_EMAIL" />
+      <nestedChildShapes>
+        <elementListCompartment Id="92912b82-b44b-4a10-ae23-415b8b476b8e" absoluteBounds="27.765, 1.21, 1.9700000000000002, 2.364705403645833" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="76a53ebf-83b7-4f98-8b5c-2574ac35c184" absoluteBounds="27.75, 4.75, 2, 3.1170068359375005">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TEMPLATE_NEW" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d367fa2d-0fe9-41b8-bd0b-c8db17b16c13" absoluteBounds="27.765, 5.21, 1.9700000000000002, 2.5570068359375" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="a96cd1f8-c483-4b7d-a759-a90c9221eeea" absoluteBounds="27.75, 8.75, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_TODO" />
+      <nestedChildShapes>
+        <elementListCompartment Id="11ea6a0b-eadc-4ab0-8bb6-9604fa947cec" absoluteBounds="27.765, 9.21, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="bff6dd0b-a2d8-4800-a2a5-1e6ce451f90b" absoluteBounds="27.75, 11.75, 2, 1.9631982421874987">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/RS_STAFF" />
+      <nestedChildShapes>
+        <elementListCompartment Id="395435c3-0495-4901-9e2a-8c56a2806f82" absoluteBounds="27.765, 12.21, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="869c0fe7-fbff-422c-a31b-81377fb9943e" absoluteBounds="27.75, 14.75, 2, 1.7708968098958327">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/TEAM_STAFF" />
+      <nestedChildShapes>
+        <elementListCompartment Id="9a59e1c9-59da-420b-bf02-31b8ed2f38fa" absoluteBounds="27.765, 15.21, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="1d7f9731-e957-45c5-8268-ba31682ab4a9" absoluteBounds="0.875, 4.25, 2, 2.1554996744791666">
+      <DataClassMoniker Name="/LinQtoSqlClassDataContext/M_NOTIFICATION_SYSTEM" />
+      <nestedChildShapes>
+        <elementListCompartment Id="19a45744-6056-4afb-907d-5a6ed8b60add" absoluteBounds="0.89, 4.71, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+  </nestedChildShapes>
+</ordesignerObjectsDiagram>

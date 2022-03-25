@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <Reference Include="Library">
-      <HintPath>..\..\WorkbaseImm_MVC\Library\obj\Debug\Library.dll</HintPath>
+      <HintPath>..\..\WorkbaseImm_MVC\bin\Library.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

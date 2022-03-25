@@ -1395,7 +1395,7 @@ namespace api.immgroup.com.Controllers
                     sql += "'" + Cusid + "', ";
                     sql += " N'" + para.rq_content + "', ";
                     sql += " N'" + para.rq_titleProduct + "', ";
-                    sql += " N'" + para.rq_utmSource + "', ";
+                    sql += " N'" + utm_source + "', ";
                     sql += " N'" + para.rq_getLink + "', ";
                     sql += " '1', ";
                     sql += " N'" + para.rq_area + "', ";

@@ -12,7 +12,7 @@ namespace Library.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.5.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -26,8 +26,9 @@ namespace Library.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=27.0.12.73;Initial Catalog=ImmiCRM;Persist Security Info=True;User ID" +
-            "=developer;Password=It$team06")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=ImmiCRM;Persist Security Info=True;Us" +
+            "er ID=sa;Password=Mekongdelta@2018;MultipleActiveResultSets=True;Application Nam" +
+            "e=EntityFramework")]
         public string ImmiCRMConnectionString {
             get {
                 return ((string)(this["ImmiCRMConnectionString"]));
@@ -37,8 +38,8 @@ namespace Library.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=27.0.12.73;Initial Catalog=ImmiCRM;Persist Security Info=True;User ID" +
-            "=sa;Password=@sunguyen0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=ImmiCRM;User ID=sa;Password=Mekongdel" +
+            "ta@2018;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False")]
         public string ImmiCRMConnectionString1 {
             get {
                 return ((string)(this["ImmiCRMConnectionString1"]));
@@ -48,66 +49,11 @@ namespace Library.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=27.0.12.73;Initial Catalog=ImmiCRM;Persist Security Info=True;User ID" +
-            "=sa;Password=Mekongdelta@12345")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=ImmiCRM;Persist Security Info=True;Us" +
+            "er ID=sa;MultipleActiveResultSets=True;Application Name=EntityFramework")]
         public string ImmiCRMConnectionString2 {
             get {
                 return ((string)(this["ImmiCRMConnectionString2"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=appsync.cloud;Initial Catalog=IMM.CRM.2018;Persist Security Info=True" +
-            ";User ID=immgroup;Password=IMMGROUP@2018")]
-        public string ImmiCRMConnectionString3 {
-            get {
-                return ((string)(this["ImmiCRMConnectionString3"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=DemoImmiCRM;Persist Security Info=Tru" +
-            "e;User ID=imm-it;Password=Mekongdelta@2018")]
-        public string ImmiCRMConnectionString4 {
-            get {
-                return ((string)(this["ImmiCRMConnectionString4"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=ImmiCRM;Persist Security Info=True;Us" +
-            "er ID=sa;Password=Mekongdelta@2018")]
-        public string ImmiCRMConnectionString5 {
-            get {
-                return ((string)(this["ImmiCRMConnectionString5"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=DemoCRM2018;Persist Security Info=Tru" +
-            "e;User ID=sa;Password=Mekongdelta@2018")]
-        public string DemoCRM2018ConnectionString {
-            get {
-                return ((string)(this["DemoCRM2018ConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=103.252.252.254;Initial Catalog=ImmiCRM;Persist Security Info=True;Us" +
-            "er ID=sa;Password=Mekongdelta@2018")]
-        public string ImmiCRMConnectionString6 {
-            get {
-                return ((string)(this["ImmiCRMConnectionString6"]));
             }
         }
     }
