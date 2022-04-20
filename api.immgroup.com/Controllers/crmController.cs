@@ -1432,6 +1432,183 @@ namespace api.immgroup.com.Controllers
             }           
         }
 
+        [HttpPost("canada/func/info/f/web/submit")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> InfoSubmitFromCanWebSite([FromBody] dynamic body)
+        {
+           string connectionStringCan = "Data Source=103.252.252.254;Initial Catalog=ImmiCan;Persist Security Info=True;User ID=sa;Password=Mekongdelta@2018";
+            SqlCommand cmd_can = new SqlCommand();
+            SqlDataAdapter sda_Can;
+            SqlDataReader sdr_Can;
+            DataSet ds_can = new DataSet();
+
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            int _s = 1; string _flag = "";
+            string utm_source = para.rq_utmSource;
+            string _e = para.rq_email;
+            string _p = para.rq_phone;
+            string _n = para.rq_cusname;
+            string Cusid = "";
+            string sql = "";
+            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
+            using (SqlConnection sqlConnection = new SqlConnection(connectionStringCan))
+            {
+                sqlConnection.Open();
+                try
+                {
+                    using (cmd_can = new SqlCommand("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'", sqlConnection))
+                    {
+                        sdr_Can = cmd_can.ExecuteReader();
+                        if (sdr_Can.Read())
+                        {
+                            Cusid = sdr_Can["CUS_ID"].ToString();                            
+                        }
+                    }
+                }
+                catch { }
+                finally{sqlConnection.Close();}
+            }
+            if (_e != "" || _p != "")
+            {
+
+                if (para.rq_sex != "Nam") { _s = 0; }
+
+                if (Cusid == "" || Cusid == null)
+                {
+                    _flag = "new";
+                    string str = "";
+                    string[] AppEmail = null;
+                    str = _e.ToString();
+                    char[] splitchar = { ';' };
+                    AppEmail = str.Split(splitchar);
+                    string pass = fc.GetUniqueKey(8);
+                    sql += "INSERT INTO M_CUSTOMER";
+                    sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+                    sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+                    sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+                    sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+                    sql += " VALUES";
+                    sql += " ( ";
+                    sql += "'',";
+                    sql += "N'" + _n + "',";
+                    sql += "N'" + fc.ConvertName(_n) + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "N'" + _p + "',";
+                    sql += "N'" + DateTime.Now.ToString() + "',";
+                    sql += "GETDATE(),";
+                    sql += _s + ",";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+                    sql += "'CR01',";
+                    sql += "'',";
+                    sql += "1,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "0,";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "'',";
+                    sql += "GETDATE(),";
+                    sql += "GETDATE(),";
+                    sql += "'" + pass + "',";
+                    sql += "N'" + _e + "',";
+                    sql += "'" + AppEmail[0] + "',";
+                    sql += "'0',";
+                    sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
+                    sql += "N'" + _p + "',";
+                    sql += "'',";
+                    sql += "(select NEWID()),";
+                    sql += "'0','0','0','0','/img/avatar/cus_default_avatar.png',0,0,''";
+                    sql += " ); ";
+                    using (SqlConnection sqlConnection = new SqlConnection(connectionStringCan))
+                    {
+                        sqlConnection.Open();
+                        try
+                        {
+                            using (cmd_can = new SqlCommand(sql, sqlConnection))
+                            {
+                                cmd_can.ExecuteNonQuery();
+                            }
+                            using (cmd_can = new SqlCommand("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", sqlConnection))
+                            {
+                                sdr_Can = cmd_can.ExecuteReader();
+                                if (sdr_Can.Read())
+                                {
+                                    Cusid = sdr_Can["CUS_ID"].ToString();
+                                }                                
+                            }
+                        }
+                        catch { }
+                        finally { sqlConnection.Close(); }
+                    }               
+                }
+            }
+
+            using (SqlConnection connection = new SqlConnection(connectionStringCan))
+            {
+                connection.Open();
+                try
+                {
+                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql += " CUS_ID, ";
+                    sql += " S_WEB_CONTENT, ";
+                    sql += " S_WEB_TITLE, ";
+                    sql += " S_WEB_SOURCE, ";
+                    sql += " S_WEB_LINK, ";
+                    sql += " FLAG_ACTIVE, ";
+                    sql += " S_WEB_NOTE_1, ";
+                    sql += " S__WEB_NOTE_2, ";
+                    sql += " S_WEB_DATE";
+                    sql += " ) ";
+                    sql += " VALUES ( ";
+                    sql += "'" + Cusid + "', ";
+                    sql += " N'" + para.rq_content + "', ";
+                    sql += " N'" + para.rq_titleProduct + "', ";
+                    sql += " N'" + utm_source + "', ";
+                    sql += " N'" + para.rq_getLink + "', ";
+                    sql += " '1', ";
+                    sql += " N'" + para.rq_area + "', ";
+                    if (_flag == "new")
+                    {
+                        sql += " N'', ";
+                    }
+                    else
+                    {
+                        sql += " N'" + para.rq_info + "', ";
+                    }
+                    sql += " GETDATE());";
+
+                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+        }
+
         private bool ValidateSecret(string value)
         {
             return value.Equals("12C1F7EF9AC8E288FBC2177B7F54D", StringComparison.OrdinalIgnoreCase);
