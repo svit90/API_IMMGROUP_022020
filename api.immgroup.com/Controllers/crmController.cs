@@ -950,6 +950,37 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Route("crm/get/export/customer/list-new")]
+        [Produces("application/json")]
+        [Route("crm/get/export/customer/list-new/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult ExportListCusNew(string fd, string fm, string fy, string td, string tm, string ty)
+        {
+            try
+            {
+               
+                string dfrom = fd + "/" + fm + "/" + fy;
+                string dto = td + "/" + tm + "/" + ty;
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
+                    var items = db.Query<dynamic>(sql: sql, param: new { @P_Begindate = dfrom, @P_Enddate = dto}, commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
         [Route("crm/get/export/customer/blocked/{id}/{office}/{sale}")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -1586,8 +1617,9 @@ namespace api.immgroup.com.Controllers
                     }
                     sql += " GETDATE());";
 
-                    sql += " INSERT INTO M_FEEDBACK (CUS_ID,STAFF_ID,FEEDBACK_DATE,FEEDBACK_CONTENT,FEEDBACK_PREPARED1,FEEDBACK_PREPARED2,FLAG_ACTIVE,INSERT_DATE,UPDATE_DATE,FLAG_SEEN,MessageID,FEEDBACK_SUBJECT,FromEmail,ToEmail,CcEmail,BccEmail,FLAG_SEND_OUT) VALUES(" + Cusid + ", 1, GETDATE(), N'"+ para.rq_content + "', 'S', 'Private', 1, GETDATE(), GETDATE(), 0, '', '', '', '', '', '', 0);";
+                    string _sql = " INSERT INTO M_FEEDBACK (CUS_ID,STAFF_ID,FEEDBACK_DATE,FEEDBACK_CONTENT,FEEDBACK_PREPARED1,FEEDBACK_PREPARED2,FLAG_ACTIVE,INSERT_DATE,UPDATE_DATE,FLAG_SEEN,MessageID,FEEDBACK_SUBJECT,FromEmail,ToEmail,CcEmail,BccEmail,FLAG_SEND_OUT) VALUES(" + Cusid + ", 1, GETDATE(), N'Khách điền form: "+ para.rq_content + "', 'C', 'Public', 1, GETDATE(), GETDATE(), 0, '', '', '', '', '', '', 0);";
                     await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    await connection.ExecuteAsync(_sql, commandType: CommandType.Text);
                     var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
                     return new OkObjectResult(response);
 
