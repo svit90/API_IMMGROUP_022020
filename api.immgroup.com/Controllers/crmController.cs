@@ -950,7 +950,6 @@ namespace api.immgroup.com.Controllers
             }
         }
 
-        [Route("crm/get/export/customer/list-new")]
         [Produces("application/json")]
         [Route("crm/get/export/customer/list-new/from/{fd}/{fm}/{fy}/to/{td}/{tm}/{ty}/")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -964,7 +963,7 @@ namespace api.immgroup.com.Controllers
                 string dto = td + "/" + tm + "/" + ty;
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    const string sql = "[dbo].[_0620_Workbase_GetFormWebsiteCountAll]";
+                    const string sql = "[dbo].[_0620_Workbase_Export_Cus_ListNew]";
                     var items = db.Query<dynamic>(sql: sql, param: new { @P_Begindate = dfrom, @P_Enddate = dto}, commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
@@ -1759,6 +1758,110 @@ namespace api.immgroup.com.Controllers
         }
         #endregion
 
-      
+        #region Bot_API
+        [Produces("application/json")]
+        [Route("bot/verify-user")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        [HttpGet]
+        [HttpPost]
+        public IActionResult BotVerifyUser(string uid)
+        {
+            //[_0620_Workbase_GetMessage_Lang_Code]
+            
+            try
+            {
+                string una = ""; string uem = ""; string uph = ""; string counts = ""; string acctype = "";
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    string sql = "SELECT * FROM M_XSheetBot WHERE USER_TELE_ID = '" + uid + "';";   
+                    DataTable dt = new DataTable();
+                    dt = DBHelper.DB_ToDataTable(sql);
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        una = row["USER_NAME"].ToString();
+                        uem = row["USER_EMAIL"].ToString();
+                        uph = row["USER_PHONE"].ToString();
+                        counts = row["COUNT_SEARCH"].ToString();
+                        acctype = row["ACC_TYPE"].ToString();
+                    }
+                    var response = new
+                    {
+                        una = una,
+                        uem = uem,
+                        uph = uph,
+                        counts = counts,
+                        acctype = acctype
+                    };
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("bot/reg-user")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        [HttpGet]
+        [HttpPost]
+        public IActionResult BotRegUser(string uid,string una, string uem,string uph)
+        {
+            //[_0620_Workbase_GetMessage_Lang_Code]
+            try
+            {
+                 string _sql = " INSERT INTO M_XSheetBot (" +
+                    "[USER_TELE_ID]," +
+                    "[USER_NAME]," +
+                    "[USER_EMAIL]," +
+                    "[USER_PHONE]," +
+                    "[COUNT_SEARCH]," +
+                    "[ACC_TYPE]," +
+                    "[PAID_DATE]," +
+                    "[FLAG_ACTIVE]," +                    
+                    "[INSERT_DATE])     " +
+                    "VALUES( ";
+                _sql += "'"+ uid+"',";
+                _sql += "N'" + una + "',";
+                _sql += "'" + uem + "',";
+                _sql += "'" + uph + "',";
+                _sql += "10,0,GETDATE(),0,GETDATE()";
+                _sql += " ); ";
+
+
+               
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                  db.Execute(_sql);
+                }
+                var response = new
+                {                 
+                    Status = "Đăng ký thành công"
+                };
+                return new OkObjectResult(response);
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+        #endregion
+
     }
 }
