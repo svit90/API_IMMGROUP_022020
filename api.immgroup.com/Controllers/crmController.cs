@@ -1768,16 +1768,17 @@ namespace api.immgroup.com.Controllers
         public IActionResult BotVerifyUser(string uid)
         {
             //[_0620_Workbase_GetMessage_Lang_Code]
-            
             try
             {
                 string una = ""; string uem = ""; string uph = ""; string counts = ""; string acctype = "";
-
+                string strcounts = ""; string stracctype = "";string strnextpaid = "";
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
-                    string sql = "SELECT * FROM M_XSheetBot WHERE USER_TELE_ID = '" + uid + "';";   
+                    string sql = "[dbo].[XLSheetBot_GetUserInfo]";
+                    //string sql = "SELECT * FROM M_XSheetBot WHERE USER_TELE_ID = '" + uid + "';";   
+                    Dictionary<string, string> para = new Dictionary<string, string>() {{ "@uid", uid }};
                     DataTable dt = new DataTable();
-                    dt = DBHelper.DB_ToDataTable(sql);
+                    dt = DBHelper.DB_ToDataTable(sql, para, CommandType.StoredProcedure);
                     foreach (DataRow row in dt.Rows)
                     {
                         una = row["USER_NAME"].ToString();
@@ -1785,6 +1786,9 @@ namespace api.immgroup.com.Controllers
                         uph = row["USER_PHONE"].ToString();
                         counts = row["COUNT_SEARCH"].ToString();
                         acctype = row["ACC_TYPE"].ToString();
+                        stracctype = row["AccountTypeStr"].ToString();
+                        strcounts = row["CountSearchStr"].ToString();
+                        strnextpaid = row["NEXT_PAID_STR"].ToString();
                     }
                     var response = new
                     {
@@ -1792,7 +1796,10 @@ namespace api.immgroup.com.Controllers
                         uem = uem,
                         uph = uph,
                         counts = counts,
-                        acctype = acctype
+                        acctype = acctype,
+                        stracctype = stracctype,
+                        strcounts = strcounts,
+                        strnextpaid = strnextpaid
                     };
                     return new OkObjectResult(response);
                 }
@@ -1847,6 +1854,57 @@ namespace api.immgroup.com.Controllers
                 var response = new
                 {                 
                     Status = "Đăng ký thành công"
+                };
+                return new OkObjectResult(response);
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("bot/log-user")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        [HttpGet]
+        [HttpPost]
+        public IActionResult BotUserSearchHistory(string uid, string key)
+        {
+            //[_0620_Workbase_GetMessage_Lang_Code]
+            try
+            {
+                int _c = Convert.ToInt32(DBHelper.GetColumnVal("SELECT COUNT_SEARCH FROM M_XSheetBot WHERE USER_TELE_ID = '" + @uid + "'", "COUNT_SEARCH"));
+                if(_c > 0)
+                {
+                    _c--;
+                }
+                else { _c = 0; }
+
+                string _sql = " INSERT INTO M_XSheetBot_SearchHistory (" +
+                   "[USER_TELE_ID]," +
+                   "[KEY_WORD]," +                 
+                   "[INSERT_DATE])     " +
+                   "VALUES( ";
+                _sql += "'" + uid + "',";
+                _sql += "N'" + key + "',";
+                _sql += "GETDATE()";
+                _sql += " ); ";
+                _sql += " UPDATE M_XSheetBot SET COUNT_SEARCH = "+ _c + " WHERE USER_TELE_ID = '" + uid + "';"	;
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    db.Execute(_sql);
+                }
+                var response = new
+                {
+                    Status = "Kết quả tra cứu"
                 };
                 return new OkObjectResult(response);
             }
