@@ -916,6 +916,188 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [Route("crm/get/export/get-data/{prod}/{cusstt}/{cusrc}/{cchk}/{c_s_d}/{c_s_m}/{c_s_y}/{c_e_d}/{c_e_m}/{c_e_y}/{khdchk}/{khd_s_d}/{khd_s_m}/{khd_s_y}/{khd_e_d}/{khd_e_m}/{khd_e_y}/{staffs}")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        [HttpGet]
+        [HttpPost]
+        public IActionResult ExportGetDataListCus(
+            string prod, string cusstt, string cusrc, string order_prod, string cchk,
+            string c_s_d, string c_s_m, string c_s_y, string c_e_d, string c_e_m, string c_e_y,
+            string khd_s_d, string khd_s_m, string khd_s_y, string khd_e_d, string khd_e_m, string khd_e_y, string khdchk, string staffs
+            )
+        {
+            try
+            {
+                Function Lib = new Function();
+                string Product = Lib.SplitAndAddSeparator(prod);
+                string ProfileStatus = Lib.SplitAndAddSeparator(cusstt);
+                string ResourceCus = Lib.SplitAndAddSeparator(cusrc);
+                string cocfrom = c_s_d + "/" + c_s_m + "/" + c_s_y;
+                string cocto = c_e_d + "/" + c_e_m + "/" + c_e_y;
+                string khdfrom = khd_s_d + "/" + khd_s_m + "/" + khd_s_y;
+                string khdto = khd_e_d + "/" + khd_e_m + "/" + khd_e_y;
+
+                string _view = "[V_Workbase_Export_Cus_ByQuery]";
+                string _sql = " SELECT ";
+                _sql += "  CusId ";
+                _sql += " ,CusName ";
+                _sql += " ,CusEmail ";
+                _sql += " ,CusPhone ";
+                _sql += " ,CusGenderName ";
+                _sql += " ,RegoinOfficeName ";
+                _sql += " ,ProductName ";
+                _sql += " ,CusResourceName ";
+                _sql += " ,ProfileStatusName ";
+                _sql += " ,SeriousRateName ";
+                _sql += " ,EvaluationStatusName ";
+                _sql += " ,DepositContactDate ";
+                _sql += " ,SignedContractDate ";
+                _sql += " ,SaleAvatar ";
+                _sql += " FROM " + _view ;
+                if (staffs != "" && staffs != "All")
+                {
+                    _sql += " INNER JOIN M_RELASIONSHIP ON CUS_ID = CusId	AND RS_CODE1 = 'CS'  AND RS_CODE2 = '"+ staffs + "' ";
+                }
+                _sql += " WHERE 1 = 1 ";
+                if (Product != "" && Product != "'All'")
+                {
+                    _sql += " AND ProductCode IN ( " + Product + " ) ";
+                }
+                if (ProfileStatus != "" && ProfileStatus != "'All'")
+                {
+                    _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
+                }
+                if (ResourceCus != "" && ResourceCus != "'All'")
+                {
+                    _sql += " AND CusResourceCode IN ( " + ResourceCus + " ) ";
+                }
+              
+                if (cchk == "on")
+                {
+                    _sql += " AND CONVERT(datetime,[O_DATE02] ,103) BETWEEN CONVERT(datetime,'"+ cocfrom + "',103)  AND  CONVERT(datetime,'" + cocto + "',103) ";
+                }
+                if (khdchk == "on")
+                {
+                    _sql += " AND CONVERT(datetime,[O_DATE03] ,103) BETWEEN CONVERT(datetime,'" + khdfrom + "',103)  AND  CONVERT(datetime,'" + khdto + "',103) ";
+                }
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql,
+                        commandType: CommandType.Text).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+
+        [Produces("application/json")]
+        [Route("crm/get-product-list/{id}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetProductToList(int id)
+        {
+            string _sql = "SELECT dbo.F_GetNameBasicCode(O_PRODUCT_CODE) AS O_PRODUCT_NAME FROM M_ORDERS WHERE O_CUS_ID = "+ id + "  AND O_FLAG_ACTIVE = '1'";
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    DataTable dt = new DataTable();
+                    string RetVal = "";
+                    using (DBHelper.cmd = new SqlCommand(_sql, connection))
+                    {
+                        DBHelper.cmd.CommandType = System.Data.CommandType.Text;
+                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
+                        while (DBHelper.sdr.Read())
+                        {
+                            RetVal += " - " + DBHelper.sdr["O_PRODUCT_NAME"].ToString();
+                        }
+                        DBHelper.sdr.Close();
+                        var response = new
+                        {
+                            ok = true,
+                            Product = RetVal,
+                        };
+                        return new OkObjectResult(response);
+                    }
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/get-staffcs-list/{id}/{mode}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public string GetStaffCsToList(int id, string mode)
+        {
+            string _reval = "";
+            string _sql = "SELECT ROWID AS StaffRowId, (STAFF_NAME + ' (' + STAFF_NAME_OTHER + ')') AS StaffName FROM M_RELASIONSHIP LEFT JOIN M_STAFF ON STAFF_ID = RS_CODE2 WHERE (RS_CODE1 = 'CS') AND (CUS_ID = "+ id + ")";
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    DataTable dt = new DataTable();
+                    string RetValId = "";
+                    string RetValName = "";
+                    using (DBHelper.cmd = new SqlCommand(_sql, connection))
+                    {
+                        DBHelper.cmd.CommandType = System.Data.CommandType.Text;
+                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
+                        while (DBHelper.sdr.Read())
+                        {
+                            RetValId += "<img alt=\"image\" width=\"38\" class=\"rounded-circle\" src=\"/Content/img/avatar/"+ DBHelper.sdr["StaffRowId"].ToString()+".jpg\">";
+                            RetValName += " - " + DBHelper.sdr["StaffName"].ToString();
+                        }
+                        DBHelper.sdr.Close();
+                        if(mode == "a")
+                        {
+                            _reval = RetValId;
+                        }else if (mode == "n")
+                        { _reval = RetValName; }                       
+                    }
+                    return _reval;
+                }
+                catch (Exception e)
+                {
+                    return e.Message;
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+        }
+
         [Route("crm/get/export/customer/staff/{id}/following/{mode}")]
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
