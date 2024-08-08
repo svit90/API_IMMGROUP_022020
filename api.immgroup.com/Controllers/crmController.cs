@@ -17,6 +17,7 @@ using Library;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace api.immgroup.com.Controllers
 {
@@ -156,6 +157,78 @@ namespace api.immgroup.com.Controllers
                     const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_All_Cus]";
 
                     var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/unlimited/search/{key}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetInfoUserByIdUnLimited(string key)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_All_Cus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        customers = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Produces("application/json")]
+        [Route("crm/{staff}/search/{key}")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetInfoUserByIdLimited(string key, string staff)
+        {
+            try
+            {
+
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[_012020_CRM_V3_FUNC_Search_Limited_Cus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @Key = key, @StaffId = staff}, commandType: CommandType.StoredProcedure).ToList();
 
                     var response = new
                     {
@@ -1470,19 +1543,7 @@ namespace api.immgroup.com.Controllers
         public async Task<IActionResult> NewTodoList([FromBody] dynamic body)
         {
             try
-            {                
-                
-                //var authorizationHeader = Request.Headers["Authorization"].First();
-                //var key = authorizationHeader.Split(' ')[1];
-                //if (string.IsNullOrEmpty(key))
-                //{
-                //    return new BadRequestResult();
-                //}
-
-                //if (ValidateSecret(key) == false)
-                //{
-                //    return new BadRequestResult();
-                //}
+            { 
                 string sql = "[dbo].[_0620_Workbase_AddNew_Todolist]";
                 dynamic para = JObject.Parse(body.ToString());
                 int Owner = para.Owner;
@@ -1516,13 +1577,70 @@ namespace api.immgroup.com.Controllers
         public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] dynamic body)
         {
             dynamic para = JObject.Parse(body.ToString());
+            RegexUtilities util = new RegexUtilities();
+            Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
             Function fc = new Function();
             int _s = 1;string _flag = "";
             string utm_source  = para.rq_utmSource;
             string _e = para.rq_email;
             string _p = para.rq_phone;
             string _n = para.rq_cusname;
-            string Cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e + "%' OR CUS_PHONE LIKE '%" + _p + "%'", "CUS_ID");
+            string Cusid = "";
+            if (_e != "")
+            {
+                if (util.IsValidEmail(_e.Trim()))
+                {
+                    DataTable dt = new DataTable();
+                    dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_EMAIL FROM M_CUSTOMER WHERE 1 = 1 AND CUS_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
+                    foreach (DataRow dtRow in dt.Rows)
+                    {
+                        string[] emailist = dtRow["CUS_EMAIL"].ToString().Split(';');
+                        foreach (var eml in emailist)
+                        {
+                            if (eml.Trim() == _e.Trim())
+                            {
+                                Cusid = dtRow["CUS_ID"].ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            if (Cusid == "" && _p != "")
+            {
+                if (_p.Trim() != "")
+                {
+                    if (regex.IsMatch(_p) == true)
+                    {
+                        DataTable dt = new DataTable();
+                        dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_PHONE FROM M_CUSTOMER WHERE 1 = 1 AND CUS_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
+                        foreach (DataRow dtRow in dt.Rows)
+                        {
+                            string[] emailist = dtRow["CUS_PHONE"].ToString().Split(';');
+                            foreach (var eml in emailist)
+                            {
+                                if (eml.Trim() == _p.Trim())
+                                {
+                                    Cusid = dtRow["CUS_ID"].ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //if ( _e != "" && _p == "")
+            //{
+            //    _sql = "SELECT CUS_ID FROM[M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e.ToLower() + "%'";
+            //}
+            //if (_e == "" && _p != "")
+            //{
+            //    _sql = "SELECT CUS_ID FROM[M_CUSTOMER] WHERE CUS_PHONE LIKE '%" + _p + "%'";
+            //}
+            //if (_e != "" && _p != "")
+            //{
+            //    _sql = "SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e.ToLower() + "%' OR CUS_PHONE LIKE '%" + _p + "%'";
+            //}
+            //Cusid = DBHelper.GetColumnVal(_sql, "CUS_ID");
             string sql = "";            
             utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
 
@@ -1551,8 +1669,8 @@ namespace api.immgroup.com.Controllers
                     sql += "'',";
                     sql += "N'" + _n + "',";
                     sql += "N'" + fc.ConvertName(_n) + "',";
-                    sql += "N'" + _e + "',";
-                    sql += "N'" + _p + "',";
+                    sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
+                    sql += "N'" + fc.formatpm(_p)+ "',";
                     sql += "N'" + DateTime.Now.ToString() + "',";
                     sql += "GETDATE(),";
                     sql += _s + ",";
@@ -1573,7 +1691,7 @@ namespace api.immgroup.com.Controllers
                     sql += "GETDATE(),";
                     sql += "GETDATE(),";
                     sql += "'" + pass + "',";
-                    sql += "N'" + _e + "',";
+                    sql += "N'" + _e.ToLower() + "',";
                     sql += "'" + AppEmail[0] + "',";
                     sql += "'0',";
                     sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
@@ -1940,168 +2058,86 @@ namespace api.immgroup.com.Controllers
         }
         #endregion
 
-        #region Bot_API
+        #region 07-2024 API - Form submit from immgroup.com
+
+        [HttpPost("crm/2024/form-all-in-one/")]
         [Produces("application/json")]
-        [Route("bot/verify-user")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        [HttpGet]
-        [HttpPost]
-        public IActionResult BotVerifyUser(string uid)
+        public async Task<IActionResult> GetDataFromImmGroupDotCom([FromBody] dynamic body)
         {
-            //[_0620_Workbase_GetMessage_Lang_Code]
-            try
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            int _s = 1; string _flag = "";
+            string utm_source = para.rq_utmSource;
+            string _e = para.rq_email;
+            string _p = para.rq_phone;
+            string _n = para.rq_cusname;
+            string _sql = "";
+           
+            string Cusid = DBHelper.GetColumnVal(_sql, "CUS_ID");
+            string sql = "";
+            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
+
+            
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
-                string una = ""; string uem = ""; string uph = ""; string counts = ""; string acctype = "";
-                string strcounts = ""; string stracctype = "";string strnextpaid = "";
-                using (var db = new SqlConnection(DBHelper.connectionString))
+                connection.Open();
+                try
                 {
-                    string sql = "[dbo].[XLSheetBot_GetUserInfo]";
-                    //string sql = "SELECT * FROM M_XSheetBot WHERE USER_TELE_ID = '" + uid + "';";   
-                    Dictionary<string, string> para = new Dictionary<string, string>() {{ "@uid", uid }};
-                    DataTable dt = new DataTable();
-                    dt = DBHelper.DB_ToDataTable(sql, para, CommandType.StoredProcedure);
-                    foreach (DataRow row in dt.Rows)
+                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                    sql += " CUS_ID, ";
+                    sql += " S_WEB_CONTENT, ";
+                    sql += " S_WEB_TITLE, ";
+                    sql += " S_WEB_SOURCE, ";
+                    sql += " S_WEB_LINK, ";
+                    sql += " FLAG_ACTIVE, ";
+                    sql += " S_WEB_NOTE_1, ";
+                    sql += " S__WEB_NOTE_2, ";
+                    sql += " S_WEB_DATE";
+                    sql += " ) ";
+                    sql += " VALUES ( ";
+                    sql += "'" + Cusid + "', ";
+                    sql += " N'" + para.rq_content + "', ";
+                    sql += " N'" + para.rq_titleProduct + "', ";
+                    sql += " N'" + utm_source + "', ";
+                    sql += " N'" + para.rq_getLink + "', ";
+                    sql += " '1', ";
+                    sql += " N'" + para.rq_area + "', ";
+                    if (_flag == "new")
                     {
-                        una = row["USER_NAME"].ToString();
-                        uem = row["USER_EMAIL"].ToString();
-                        uph = row["USER_PHONE"].ToString();
-                        counts = row["COUNT_SEARCH"].ToString();
-                        acctype = row["ACC_TYPE"].ToString();
-                        stracctype = row["AccountTypeStr"].ToString();
-                        strcounts = row["CountSearchStr"].ToString();
-                        strnextpaid = row["NEXT_PAID_STR"].ToString();
+                        sql += " N'', ";
                     }
+                    else
+                    {
+                        sql += " N'" + para.rq_info + "', ";
+                    }
+                    sql += " GETDATE());";
+
+                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+
+                }
+                catch (Exception e)
+                {
                     var response = new
                     {
-                        una = una,
-                        uem = uem,
-                        uph = uph,
-                        counts = counts,
-                        acctype = acctype,
-                        stracctype = stracctype,
-                        strcounts = strcounts,
-                        strnextpaid = strnextpaid
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
                     };
-                    return new OkObjectResult(response);
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
                 }
             }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
 
-                return new BadRequestObjectResult(response);
-            }
-        }
-
-        [Produces("application/json")]
-        [Route("bot/reg-user")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        [HttpGet]
-        [HttpPost]
-        public IActionResult BotRegUser(string uid,string una, string uem,string uph)
-        {
-            //[_0620_Workbase_GetMessage_Lang_Code]
-            try
-            {
-                 string _sql = " INSERT INTO M_XSheetBot (" +
-                    "[USER_TELE_ID]," +
-                    "[USER_NAME]," +
-                    "[USER_EMAIL]," +
-                    "[USER_PHONE]," +
-                    "[COUNT_SEARCH]," +
-                    "[ACC_TYPE]," +
-                    "[PAID_DATE]," +
-                    "[FLAG_ACTIVE]," +                    
-                    "[INSERT_DATE])     " +
-                    "VALUES( ";
-                _sql += "'"+ uid+"',";
-                _sql += "N'" + una + "',";
-                _sql += "'" + uem + "',";
-                _sql += "'" + uph + "',";
-                _sql += "10,0,GETDATE(),0,GETDATE()";
-                _sql += " ); ";
-
-
-               
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                  db.Execute(_sql);
-                }
-                var response = new
-                {                 
-                    Status = "Đăng ký thành công"
-                };
-                return new OkObjectResult(response);
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
-        }
-
-        [Produces("application/json")]
-        [Route("bot/log-user")]
-        [ProducesResponseType(200, Type = typeof(JsonResult))]
-        [AllowAnonymous]
-        [HttpGet]
-        [HttpPost]
-        public IActionResult BotUserSearchHistory(string uid, string key)
-        {
-            //[_0620_Workbase_GetMessage_Lang_Code]
-            try
-            {
-                int _c = Convert.ToInt32(DBHelper.GetColumnVal("SELECT COUNT_SEARCH FROM M_XSheetBot WHERE USER_TELE_ID = '" + @uid + "'", "COUNT_SEARCH"));
-                if(_c > 0)
-                {
-                    _c--;
-                }
-                else { _c = 0; }
-
-                string _sql = " INSERT INTO M_XSheetBot_SearchHistory (" +
-                   "[USER_TELE_ID]," +
-                   "[KEY_WORD]," +                 
-                   "[INSERT_DATE])     " +
-                   "VALUES( ";
-                _sql += "'" + uid + "',";
-                _sql += "N'" + key + "',";
-                _sql += "GETDATE()";
-                _sql += " ); ";
-                _sql += " UPDATE M_XSheetBot SET COUNT_SEARCH = "+ _c + " WHERE USER_TELE_ID = '" + uid + "';"	;
-
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    db.Execute(_sql);
-                }
-                var response = new
-                {
-                    Status = "Kết quả tra cứu"
-                };
-                return new OkObjectResult(response);
-            }
-            catch (Exception e)
-            {
-                var response = new
-                {
-                    ok = false,
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
-            }
         }
         #endregion
-
     }
 }
