@@ -18,6 +18,8 @@ using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using System.Net;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace api.immgroup.com.Controllers
 {
@@ -1083,30 +1085,34 @@ namespace api.immgroup.com.Controllers
         [AllowAnonymous]
         public IActionResult GetProductToList(int id)
         {
-            string _sql = "SELECT dbo.F_GetNameBasicCode(O_PRODUCT_CODE) AS O_PRODUCT_NAME FROM M_ORDERS WHERE O_CUS_ID = "+ id + "  AND O_FLAG_ACTIVE = '1'";
+            string _sql = "SELECT dbo.F_GetNameBasicCode(O_PRODUCT_CODE) AS O_PRODUCT_NAME FROM M_ORDERS WHERE O_CUS_ID = @id AND O_FLAG_ACTIVE = '1'";
+            string RetVal = "";
+
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
                 try
                 {
-                    DataTable dt = new DataTable();
-                    string RetVal = "";
-                    using (DBHelper.cmd = new SqlCommand(_sql, connection))
+                    using (SqlCommand cmd = new SqlCommand(_sql, connection))
                     {
-                        DBHelper.cmd.CommandType = System.Data.CommandType.Text;
-                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
-                        while (DBHelper.sdr.Read())
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandType = System.Data.CommandType.Text;
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            RetVal += " - " + DBHelper.sdr["O_PRODUCT_NAME"].ToString();
+                            while (reader.Read())
+                            {
+                                RetVal += " - " + reader["O_PRODUCT_NAME"].ToString();
+                            }
                         }
-                        DBHelper.sdr.Close();
-                        var response = new
-                        {
-                            ok = true,
-                            Product = RetVal,
-                        };
-                        return new OkObjectResult(response);
                     }
+
+                    var response = new
+                    {
+                        ok = true,
+                        Product = RetVal,
+                    };
+                    return new OkObjectResult(response);
                 }
                 catch (Exception e)
                 {
@@ -1116,15 +1122,11 @@ namespace api.immgroup.com.Controllers
                         message = "Error",
                         error = e.Message
                     };
-
                     return new BadRequestObjectResult(response);
-                }
-                finally
-                {
-                    connection.Close();
                 }
             }
         }
+
 
         [Produces("application/json")]
         [Route("crm/get-staffcs-list/{id}/{mode}")]
@@ -1132,44 +1134,48 @@ namespace api.immgroup.com.Controllers
         [AllowAnonymous]
         public string GetStaffCsToList(int id, string mode)
         {
+            string _sql = @"
+        SELECT ROWID AS StaffRowId, 
+               (STAFF_NAME + ' (' + STAFF_NAME_OTHER + ')') AS StaffName 
+        FROM M_RELASIONSHIP 
+        LEFT JOIN M_STAFF ON STAFF_ID = RS_CODE2 
+        WHERE (RS_CODE1 = 'CS') AND (CUS_ID = @id)";
+
+            string RetValId = "";
+            string RetValName = "";
             string _reval = "";
-            string _sql = "SELECT ROWID AS StaffRowId, (STAFF_NAME + ' (' + STAFF_NAME_OTHER + ')') AS StaffName FROM M_RELASIONSHIP LEFT JOIN M_STAFF ON STAFF_ID = RS_CODE2 WHERE (RS_CODE1 = 'CS') AND (CUS_ID = "+ id + ")";
+
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
                 try
                 {
-                    DataTable dt = new DataTable();
-                    string RetValId = "";
-                    string RetValName = "";
-                    using (DBHelper.cmd = new SqlCommand(_sql, connection))
+                    using (SqlCommand cmd = new SqlCommand(_sql, connection))
                     {
-                        DBHelper.cmd.CommandType = System.Data.CommandType.Text;
-                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
-                        while (DBHelper.sdr.Read())
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.CommandType = System.Data.CommandType.Text;
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            RetValId += "<img alt=\"image\" width=\"38\" class=\"rounded-circle\" src=\"/Content/img/avatar/"+ DBHelper.sdr["StaffRowId"].ToString()+".jpg\">";
-                            RetValName += " - " + DBHelper.sdr["StaffName"].ToString();
+                            while (reader.Read())
+                            {
+                                RetValId += $"<img alt=\"image\" width=\"38\" class=\"rounded-circle\" src=\"/Content/img/avatar/{reader["StaffRowId"]}.jpg\">";
+                                RetValName += " - " + reader["StaffName"].ToString();
+                            }
                         }
-                        DBHelper.sdr.Close();
-                        if(mode == "a")
-                        {
-                            _reval = RetValId;
-                        }else if (mode == "n")
-                        { _reval = RetValName; }                       
+
+                        _reval = mode == "a" ? RetValId : RetValName;
                     }
-                    return _reval;
                 }
                 catch (Exception e)
                 {
-                    return e.Message;
-                }
-                finally
-                {
-                    connection.Close();
+                    _reval = e.Message;
                 }
             }
+
+            return _reval;
         }
+
 
         [Route("crm/get/export/customer/staff/{id}/following/{mode}")]
         [Produces("application/json")]
@@ -1392,6 +1398,58 @@ namespace api.immgroup.com.Controllers
         }
         #endregion
 
+        #region HRM API
+        [Produces("application/json")]
+        [Route("hrm/candidate/add-new")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> HrmCandidateAdd([FromBody] dynamic body)
+        {
+            string sql =""; 
+            dynamic para = JObject.Parse(body.ToString());  
+            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            {
+                connection.Open();
+                try
+                {
+                    sql = " INSERT INTO M_HRM_CANDIDATE(CANDIDATE_TOKEN ,CANDIDATE_NAME ,CANDIDATE_EMAIL ,CANDIDATE_PHONE ,CANDIDATE_GENDER ,CANDIDATE_BIRTHDAY ,CANDIDATE_POSITION ,CANDIDATE_LINKDRIVE ,CANDIDATE_STATUS ,CANDIDATE_RC ,CANDIDATE_NOTE ,CANDIDATE_APPLY_DATE ,FLAG_ACTIVE ,UPDATE_DATE ,COMPANY_APPLY) ";
+                    sql += " VALUES ( ";
+                    sql += " newid() , ";
+                    sql += " N'" + para.rq_name + "', ";
+                    sql += " N'" + para.rq_email + "', ";
+                    sql += " N'" + para.rq_phone + "', ";
+                    sql += " '" + para.rq_gender + "', ";
+                    sql += " '', ";
+                    sql += " N'" + para.rq_position + "', ";
+                    sql += " '','', ";
+                    sql += " N'" + para.rq_source + "', ";
+                    sql += " N'" + para.rq_noted + "', ";
+                    sql += " CONVERT(nvarchar(10), GETDATE(), 103) , 1, GETDATE(), ";
+                    sql += " N'" + para.rq_company + "'";                  
+                    sql += " );";
+                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+        }
+        #endregion
+
         #endregion
 
         #region FUNCTION API CHECK
@@ -1495,20 +1553,22 @@ namespace api.immgroup.com.Controllers
                 {
                     string RetVal = "";
                     string Query = "[dbo].[_0620_Workbase_TodoList_AddNew]";
-                    using (DBHelper.cmd = new SqlCommand(Query, connection))
+
+                    using (SqlCommand cmd = new SqlCommand(Query, connection))
                     {
-                        DBHelper.cmd.Parameters.AddWithValue("@P_Owner", data.Owner);
-                        DBHelper.cmd.Parameters.AddWithValue("@P_Todo", data.TaskDetails);
-                        DBHelper.cmd.Parameters.AddWithValue("@P_Rate", data.Rate);
-                        DBHelper.cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                        DBHelper.sdr = DBHelper.cmd.ExecuteReader();
-                        while (DBHelper.sdr.Read())
+                        cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@P_Owner", data.Owner);
+                        cmd.Parameters.AddWithValue("@P_Todo", data.TaskDetails);
+                        cmd.Parameters.AddWithValue("@P_Rate", data.Rate);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            RetVal = DBHelper.sdr["TODO_ID"].ToString();
-                            break;
+                            if (reader.Read())
+                            {
+                                RetVal = reader["TODO_ID"].ToString();
+                            }
                         }
-                        DBHelper.cmd.Parameters.Clear();
-                        DBHelper.sdr.Close();                       
+
                         var response = new
                         {
                             TODO_ID = RetVal,
@@ -1527,12 +1587,9 @@ namespace api.immgroup.com.Controllers
 
                     return new BadRequestObjectResult(response);
                 }
-                finally
-                {
-                    connection.Close();
-                }
-            }           
+            }
         }
+
 
 
         [HttpPost("crm/func/todolist/addnew")]
@@ -1585,7 +1642,11 @@ namespace api.immgroup.com.Controllers
             string _e = para.rq_email;
             string _p = para.rq_phone;
             string _n = para.rq_cusname;
+            string _prod = para.rq_product;
             string Cusid = "";
+
+            string _nextturn = DBHelper.GetColumnVal("SELECT TOP 1 TPD_STAFF_ID FROM [M_TEAMS_PRODUCTS] p INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	WHERE TP_PROD_CODE = '" + para.rq_product + "' AND TPD_FLAG_MAIN = 'checked' AND TPD_FLAG_ACTIVE = 1 AND TP_FLAG_ACTIVE = 1 AND s.FLAG_ACTIVE = 1	ORDER BY TPD_SAS_COUNT ASC", "TPD_STAFF_ID");
+
             if (_e != "")
             {
                 if (util.IsValidEmail(_e.Trim()))
@@ -1626,22 +1687,8 @@ namespace api.immgroup.com.Controllers
                         }
                     }
                 }
-            }
-
-            //if ( _e != "" && _p == "")
-            //{
-            //    _sql = "SELECT CUS_ID FROM[M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e.ToLower() + "%'";
-            //}
-            //if (_e == "" && _p != "")
-            //{
-            //    _sql = "SELECT CUS_ID FROM[M_CUSTOMER] WHERE CUS_PHONE LIKE '%" + _p + "%'";
-            //}
-            //if (_e != "" && _p != "")
-            //{
-            //    _sql = "SELECT CUS_ID FROM [M_CUSTOMER] WHERE CUS_EMAIL LIKE '%" + _e.ToLower() + "%' OR CUS_PHONE LIKE '%" + _p + "%'";
-            //}
-            //Cusid = DBHelper.GetColumnVal(_sql, "CUS_ID");
-            string sql = "";            
+            }      
+            string sql = "";
             utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
 
             if (_e != "" || _p != "")
@@ -1670,7 +1717,7 @@ namespace api.immgroup.com.Controllers
                     sql += "N'" + _n + "',";
                     sql += "N'" + fc.ConvertName(_n) + "',";
                     sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
-                    sql += "N'" + fc.formatpm(_p)+ "',";
+                    sql += "N'" + fc.formatpm(_p) + "',";
                     sql += "N'" + DateTime.Now.ToString() + "',";
                     sql += "GETDATE(),";
                     sql += _s + ",";
@@ -1703,63 +1750,66 @@ namespace api.immgroup.com.Controllers
                     DBHelper.ExecuteQuery(sql);
                     Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
                 }
-            }            
-           
-            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            }
+            
+            if (Cusid != "" && Cusid != null)
             {
-                connection.Open();
-                try
+                sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+                sql += " CUS_ID, ";
+                sql += " S_WEB_CONTENT, ";
+                sql += " S_WEB_TITLE, ";
+                sql += " S_WEB_SOURCE, ";
+                sql += " S_WEB_LINK, ";
+                sql += " FLAG_ACTIVE, ";
+                sql += " S_WEB_NOTE_1, ";
+                sql += " S__WEB_NOTE_2, ";
+                sql += " S_WEB_DATE";
+                sql += " ) ";
+                sql += " VALUES ( ";
+                sql += "'" + Cusid + "', ";
+                sql += " N'" + para.rq_content + "', ";
+                sql += " N'" + para.rq_titleProduct + "', ";
+                sql += " N'" + utm_source + "', ";
+                sql += " N'" + para.rq_getLink + "', ";
+                sql += " '1', ";
+                sql += " N'" + para.rq_area + "', ";
+                if (_flag == "new")
                 {
-                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
-                    sql += " CUS_ID, ";
-                    sql += " S_WEB_CONTENT, ";
-                    sql += " S_WEB_TITLE, ";
-                    sql += " S_WEB_SOURCE, ";
-                    sql += " S_WEB_LINK, ";
-                    sql += " FLAG_ACTIVE, ";
-                    sql += " S_WEB_NOTE_1, ";
-                    sql += " S__WEB_NOTE_2, ";
-                    sql += " S_WEB_DATE";
-                    sql += " ) ";
-                    sql += " VALUES ( ";
-                    sql += "'" + Cusid + "', ";
-                    sql += " N'" + para.rq_content + "', ";
-                    sql += " N'" + para.rq_titleProduct + "', ";
-                    sql += " N'" + utm_source + "', ";
-                    sql += " N'" + para.rq_getLink + "', ";
-                    sql += " '1', ";
-                    sql += " N'" + para.rq_area + "', ";
-                    if(_flag == "new")
-                    {
-                        sql += " N'', ";
-                    }
-                    else
-                    {
-                        sql += " N'" + para.rq_info + "', ";
-                    }                   
-                    sql += " GETDATE());";
-
-                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
-                    var response = new { ok = true, message = "Success", error ="Thao tác hoàn tất" };
-                    return new OkObjectResult(response);
-
+                    sql += " N'', ";
                 }
-                catch (Exception e)
+                else
                 {
-                    var response = new
+                    sql += " N'" + para.rq_info + "', ";
+                }
+                sql += " GETDATE());";
+                DBHelper.ExecuteQuery(sql);
+                string _wid = DBHelper.GetColumnVal("SELECT TOP 1 S_WEB_ID FROM M_SUBMIT_FROM_WEBSITE ORDER BY S_WEB_ID DESC", "S_WEB_ID");
+                if (_wid != "" && _wid != null)
+                {
+                    string apiUrl = "https://system.immgroup.com/dept/saleleads-allocation/submit/" + _wid;
+                    var formData = new List<KeyValuePair<string, string>>
                     {
-                        ok = false,
-                        message = "Error",
-                        error = e.Message
+                        new KeyValuePair<string, string>("t_cId", Cusid?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("sl_prod", para.rq_product?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("t_cusinfo",
+                            $"{para.rq_cusname?.ToString() ?? ""}, {para.rq_email?.ToString() ?? ""}, {para.rq_phone?.ToString() ?? ""}, {para.rq_sex?.ToString() ?? ""}"),
+                        new KeyValuePair<string, string>("t_cresource", utm_source?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("t_noted", "Khách đăng ký tư vấn trên web có sản phẩm rõ ràng nên được hệ thống chia leads tự động <br>" + para.rq_content),
+                        new KeyValuePair<string, string>("sl_office", "OFFICE01"),
+                        new KeyValuePair<string, string>("sl_location", para.rq_area?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("t_nextturn", _nextturn?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("sl_agentrf", "9"),
+                        new KeyValuePair<string, string>("_webId", _wid?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("t_staffblock", "")
                     };
+                    HttpContent _dtcontent = new FormUrlEncodedContent(formData); 
+                    HttpClient _httpClient = new HttpClient();
+                    HttpResponseMessage resp = await _httpClient.PostAsync(apiUrl, _dtcontent);
+                }                
+            }
+            var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+            return new OkObjectResult(response);
 
-                    return new BadRequestObjectResult(response);
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }           
         }
 
         [HttpPost("canada/func/info/f/web/submit")]
@@ -2059,66 +2109,112 @@ namespace api.immgroup.com.Controllers
         #endregion
 
         #region 07-2024 API - Form submit from immgroup.com
-
-        [HttpPost("crm/2024/form-all-in-one/")]
+       
+        [HttpPost("crm/func/agent/register/submit")]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public async Task<IActionResult> GetDataFromImmGroupDotCom([FromBody] dynamic body)
+        public async Task<IActionResult> AgentRegisterSubmit([FromBody] dynamic body)
         {
             dynamic para = JObject.Parse(body.ToString());
+            RegexUtilities util = new RegexUtilities();
+            Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
             Function fc = new Function();
-            int _s = 1; string _flag = "";
             string utm_source = para.rq_utmSource;
             string _e = para.rq_email;
             string _p = para.rq_phone;
-            string _n = para.rq_cusname;
-            string _sql = "";
-           
-            string Cusid = DBHelper.GetColumnVal(_sql, "CUS_ID");
-            string sql = "";
-            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
-
+            string _n = para.rq_agentname;
+            string _address = para.rq_address;
+            string _cccd = para.rq_cccd;
+            string _cccdDate = para.rq_cccdDate;
+            string _company = para.rq_company;
+            string _currentJob = para.rq_currentJob;
+            string _fieldOfwork = para.rq_fieldOfwork;
+            string _partchannel = para.rq_partchannel;
+            string _cussource = para.rq_cussource;
+            string _gender = para.rq_gender;
             
+            //if (_e != "")
+            //{
+            //    if (util.IsValidEmail(_e.Trim()))
+            //    {
+            //        DataTable dt = new DataTable();
+            //        dt = DBHelper.DB_ToDataTable("SELECT PARTNER_ID,PARTNER_EMAIL FROM M_PARTNER WHERE 1 = 1 AND PARTNER_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
+            //        foreach (DataRow dtRow in dt.Rows)
+            //        {
+            //            string[] emailist = dtRow["PARTNER_EMAIL"].ToString().Split(';');
+            //            foreach (var eml in emailist)
+            //            {
+            //                if (eml.Trim() == _e.Trim())
+            //                {
+            //                    _AgenId = dtRow["PARTNER_ID"].ToString();
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+            //if (_AgenId == "" && _p != "")
+            //{
+            //    if (_p.Trim() != "")
+            //    {
+            //        if (regex.IsMatch(_p) == true)
+            //        {
+            //            DataTable dt = new DataTable();
+            //            dt = DBHelper.DB_ToDataTable("SELECT PARTNER_ID,PARTNER_PHONE FROM M_PARTNER WHERE 1 = 1 AND PARTNER_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
+            //            foreach (DataRow dtRow in dt.Rows)
+            //            {
+            //                string[] emailist = dtRow["PARTNER_PHONE"].ToString().Split(';');
+            //                foreach (var eml in emailist)
+            //                {
+            //                    if (eml.Trim() == _p.Trim())
+            //                    {
+            //                        _AgenId = dtRow["PARTNER_ID"].ToString();
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+
+            string sql = "";
+           
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
                 try
                 {
-                    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
-                    sql += " CUS_ID, ";
-                    sql += " S_WEB_CONTENT, ";
-                    sql += " S_WEB_TITLE, ";
-                    sql += " S_WEB_SOURCE, ";
-                    sql += " S_WEB_LINK, ";
-                    sql += " FLAG_ACTIVE, ";
-                    sql += " S_WEB_NOTE_1, ";
-                    sql += " S__WEB_NOTE_2, ";
-                    sql += " S_WEB_DATE";
-                    sql += " ) ";
-                    sql += " VALUES ( ";
-                    sql += "'" + Cusid + "', ";
-                    sql += " N'" + para.rq_content + "', ";
-                    sql += " N'" + para.rq_titleProduct + "', ";
-                    sql += " N'" + utm_source + "', ";
-                    sql += " N'" + para.rq_getLink + "', ";
-                    sql += " '1', ";
-                    sql += " N'" + para.rq_area + "', ";
-                    if (_flag == "new")
+                    if (_e != "" && _p != "" && _cccd != "")
                     {
-                        sql += " N'', ";
-                    }
-                    else
-                    {
-                        sql += " N'" + para.rq_info + "', ";
-                    }
-                    sql += " GETDATE());";
-
-                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                        sql += @"INSERT INTO M_PARTNER (PARTNER_NAME,PARTNER_EMAIL,PARTNER_PHONE,PARTNER_ADDRESS,PARTNER_PASS,PARTNER_PREPARED1,PARTNER_PREPARED2,FLAG_ACTIVE
+                        ,INSERT_DATE,DATE_CONTACT,PART_CHANEL,PART_SOURCE,PART_PORTFOLIO,PART_CREATOR,ROWID,AVATAR_IMG,PARTNER_CCCD,PARTNER_CCCD_DATE,VERIFY_STEP, PARTNER_GENDER)";
+                        sql += " VALUES";
+                        sql += " ( ";
+                        sql += "N'" + _n + "',";
+                        sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
+                        sql += "N'" + fc.formatpm(_p) + "',";
+                        sql += "N'" + _address + "',";
+                        sql += "'191DC397C57B606A818664BA16B085EB06432653',";
+                        sql += "N'" + _company + "',";
+                        sql += "N'" + _currentJob + "',";
+                        sql += "1,";
+                        sql += "GETDATE(),";
+                        sql += "GETDATE(),";
+                        sql += "N'" + _partchannel + "',";
+                        sql += "N'" + _cussource + "',";
+                        sql += "N'" + _fieldOfwork + "',";
+                        sql += "1,";
+                        sql += "(select NEWID()),";
+                        sql += "'/img/avatar/partner_default_avatar.png',";
+                        sql += "N'" + _cccd + "',";
+                        sql += "N'" + _cccdDate + "',";
+                        sql += "0,";
+                        sql +=  _gender;
+                        sql += " ); ";
+                        await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    }                    
                     var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
                     return new OkObjectResult(response);
-
                 }
                 catch (Exception e)
                 {
@@ -2136,6 +2232,7 @@ namespace api.immgroup.com.Controllers
                     connection.Close();
                 }
             }
+            
 
         }
         #endregion
