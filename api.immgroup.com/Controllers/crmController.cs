@@ -1638,14 +1638,15 @@ namespace api.immgroup.com.Controllers
             Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
             Function fc = new Function();
             int _s = 1;string _flag = "";
-            string utm_source  = para.rq_utmSource;
+            string utm_source_char  = para.rq_utmSource;
+            string utm_source = para.rq_utmSource;
             string _e = para.rq_email;
             string _p = para.rq_phone;
             string _n = para.rq_cusname;
             string _prod = para.rq_product;
             string Cusid = "";
 
-            string _nextturn = DBHelper.GetColumnVal("SELECT TOP 1 TPD_STAFF_ID FROM [M_TEAMS_PRODUCTS] p INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	WHERE TP_PROD_CODE = '" + para.rq_product + "' AND TPD_FLAG_MAIN = 'checked' AND TPD_FLAG_ACTIVE = 1 AND TP_FLAG_ACTIVE = 1 AND s.FLAG_ACTIVE = 1	ORDER BY TPD_SAS_COUNT ASC", "TPD_STAFF_ID");
+            string _nextturn = DBHelper.GetColumnVal("SELECT TOP 1 TPD_STAFF_ID FROM [M_TEAMS_PRODUCTS] p INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	WHERE TP_PROD_CODE = '" + para.rq_product + "' AND TPD_FLAG_MAIN = 'checked' AND ';' + p.TP_MEMBERS_ID + ';' LIKE '%;' + Convert(nvarchar,pd.TPD_STAFF_ID) + ';%' AND TPD_FLAG_ACTIVE = 1 AND TP_FLAG_ACTIVE = 1 AND s.FLAG_ACTIVE = 1	ORDER BY TPD_SAS_COUNT ASC", "TPD_STAFF_ID");
 
             if (_e != "")
             {
@@ -1783,8 +1784,8 @@ namespace api.immgroup.com.Controllers
                 }
                 sql += " GETDATE());";
                 DBHelper.ExecuteQuery(sql);
-                string _wid = DBHelper.GetColumnVal("SELECT TOP 1 S_WEB_ID FROM M_SUBMIT_FROM_WEBSITE ORDER BY S_WEB_ID DESC", "S_WEB_ID");
-                if (_wid != "" && _wid != null)
+                string _wid = DBHelper.GetColumnVal("SELECT TOP 1 S_WEB_ID FROM M_SUBMIT_FROM_WEBSITE WHERE CUS_ID = " + Cusid+" ORDER BY S_WEB_ID DESC", "S_WEB_ID");
+                if (_wid != "" && _wid != null && _flag == "new")
                 {
                     string apiUrl = "https://system.immgroup.com/dept/saleleads-allocation/submit/" + _wid;
                     var formData = new List<KeyValuePair<string, string>>
@@ -1793,14 +1794,15 @@ namespace api.immgroup.com.Controllers
                         new KeyValuePair<string, string>("sl_prod", para.rq_product?.ToString() ?? ""),
                         new KeyValuePair<string, string>("t_cusinfo",
                             $"{para.rq_cusname?.ToString() ?? ""}, {para.rq_email?.ToString() ?? ""}, {para.rq_phone?.ToString() ?? ""}, {para.rq_sex?.ToString() ?? ""}"),
-                        new KeyValuePair<string, string>("t_cresource", utm_source?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_noted", "Khách đăng ký tư vấn trên web có sản phẩm rõ ràng nên được hệ thống chia leads tự động <br>" + para.rq_content),
+                        new KeyValuePair<string, string>("t_cresource", utm_source_char?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("t_noted", "Khách đăng ký trên web, hệ thống chia leads tự động. Nguồn <br>" +  para.rq_utmSource),
                         new KeyValuePair<string, string>("sl_office", "OFFICE01"),
                         new KeyValuePair<string, string>("sl_location", para.rq_area?.ToString() ?? ""),
                         new KeyValuePair<string, string>("t_nextturn", _nextturn?.ToString() ?? ""),
                         new KeyValuePair<string, string>("sl_agentrf", "9"),
                         new KeyValuePair<string, string>("_webId", _wid?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_staffblock", "")
+                        new KeyValuePair<string, string>("t_staffblock", ""),
+                        new KeyValuePair<string, string>("t_feedback", para.rq_content?.ToString() ?? "")
                     };
                     HttpContent _dtcontent = new FormUrlEncodedContent(formData); 
                     HttpClient _httpClient = new HttpClient();
@@ -2234,6 +2236,42 @@ namespace api.immgroup.com.Controllers
             }
             
 
+        }
+        #endregion
+
+        #region API FOR AI 2025
+
+        [HttpGet("om/regulations/all")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult GetAllTopicForAI()
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[OM_Get_AllTopic_ForAI]";
+
+                    var items = db.Query<dynamic>(sql: sql,commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
         }
         #endregion
     }
