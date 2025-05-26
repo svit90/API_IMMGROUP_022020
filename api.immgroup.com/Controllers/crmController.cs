@@ -1690,7 +1690,7 @@ namespace api.immgroup.com.Controllers
                 }
             }      
             string sql = "";
-            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
+            utm_source = fc.CheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
 
             if (_e != "" || _p != "")
             {
@@ -1795,7 +1795,7 @@ namespace api.immgroup.com.Controllers
                         new KeyValuePair<string, string>("t_cusinfo",
                             $"{para.rq_cusname?.ToString() ?? ""}, {para.rq_email?.ToString() ?? ""}, {para.rq_phone?.ToString() ?? ""}, {para.rq_sex?.ToString() ?? ""}"),
                         new KeyValuePair<string, string>("t_cresource", utm_source_char?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_noted", "Khách đăng ký trên web, hệ thống chia leads tự động. Nguồn <br>" +  para.rq_utmSource),
+                        new KeyValuePair<string, string>("t_noted", $"[AutoSAS] Nguồn:  {para.rq_utmSource} {para.rq_titleProduct}"),
                         new KeyValuePair<string, string>("sl_office", "OFFICE01"),
                         new KeyValuePair<string, string>("sl_location", para.rq_area?.ToString() ?? ""),
                         new KeyValuePair<string, string>("t_nextturn", _nextturn?.ToString() ?? ""),
@@ -1836,7 +1836,7 @@ namespace api.immgroup.com.Controllers
             string _n = para.rq_cusname;
             string Cusid = "";
             string sql = "";
-            utm_source = fc.CheckResourceCodeByUtm_CSV(utm_source);
+            utm_source = fc.CheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
             using (SqlConnection sqlConnection = new SqlConnection(connectionStringCan))
             {
                 sqlConnection.Open();
