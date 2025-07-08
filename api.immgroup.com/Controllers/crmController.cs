@@ -26,6 +26,14 @@ namespace api.immgroup.com.Controllers
     [ApiController]
     public class crmController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
+
+        // Dùng constructor để inject IConfiguration
+        public crmController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [Produces("application/json")]
         [Route("crm/")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
@@ -935,59 +943,96 @@ namespace api.immgroup.com.Controllers
         [HttpPost]
         public IActionResult ExportListCus(string Product, string ProfileStatus, string SeriousRate, string Evaluation)
         {
+            //try
+            //{
+            //    Function Lib = new Function();
+            //    Product = Lib.SplitAndAddSeparator(Product);
+            //    ProfileStatus = Lib.SplitAndAddSeparator(ProfileStatus);
+            //    SeriousRate = Lib.SplitAndAddSeparator(SeriousRate);
+            //    Evaluation = Lib.SplitAndAddSeparator(Evaluation);
+            //    string _view = "[V_Workbase_Export_Cus_ByQuery]";
+            //    string _sql = " SELECT ";
+            //    _sql += "  CusId ";
+            //    _sql += " ,CusName ";
+            //    _sql += " ,CusEmail ";
+            //    _sql += " ,CusPhone ";
+            //    _sql += " ,CusGenderName ";
+            //    _sql += " ,RegoinOfficeName ";
+            //    _sql += " ,ProductName ";
+            //    _sql += " ,ProfileStatusName ";
+            //    _sql += " ,SeriousRateName ";
+            //    _sql += " ,EvaluationStatusName ";
+            //    _sql += " FROM " + _view + " WHERE 1 = 1 ";
+            //    if (Product != "" && Product != "'*'")
+            //    {
+            //        _sql += " AND ProductCode IN ( " + Product + " ) ";
+            //    }
+            //    if (ProfileStatus != "" && ProfileStatus != "'*'")
+            //    {
+            //        _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
+            //    }
+            //    if (SeriousRate != "" && SeriousRate != "'*'")
+            //    {
+            //        _sql += " AND SeriousRate IN ( " + SeriousRate + " ) ";
+            //    }
+            //    if (Evaluation != "" && Evaluation != "'*'")
+            //    {
+            //        _sql += " AND EvaluationStatus IN ( " + Evaluation + " ) ";
+            //    }
+            //    using (var db = new SqlConnection(DBHelper.connectionString))
+            //    {
+            //        var items = db.Query<dynamic>(sql: _sql,
+            //            commandType: CommandType.Text).ToList();
+            //        return new OkObjectResult(items);
+            //    }
+            //}
+            //catch (Exception e)
+            //{
+            //    var response = new
+            //    {
+            //        ok = false,
+            //        message = "Error",
+            //        error = e.Message
+            //    };
+
+            //    return new BadRequestObjectResult(response);
+            //}
             try
             {
-                Function Lib = new Function();
-                Product = Lib.SplitAndAddSeparator(Product);
-                ProfileStatus = Lib.SplitAndAddSeparator(ProfileStatus);
-                SeriousRate = Lib.SplitAndAddSeparator(SeriousRate);
-                Evaluation = Lib.SplitAndAddSeparator(Evaluation);
-                string _view = "[V_Workbase_Export_Cus_ByQuery]";
-                string _sql = " SELECT ";
-                _sql += "  CusId ";
-                _sql += " ,CusName ";
-                _sql += " ,CusEmail ";
-                _sql += " ,CusPhone ";
-                _sql += " ,CusGenderName ";
-                _sql += " ,RegoinOfficeName ";
-                _sql += " ,ProductName ";
-                _sql += " ,ProfileStatusName ";
-                _sql += " ,SeriousRateName ";
-                _sql += " ,EvaluationStatusName ";
-                _sql += " FROM " + _view + " WHERE 1 = 1 ";
-                if (Product != "" && Product != "'*'")
+                // Xây dựng câu lệnh SQL và tham số một cách linh động
+                var sqlBuilder = new StringBuilder("SELECT CusId, CusName, CusEmail, CusPhone, CusGenderName, RegoinOfficeName, ProductName, ProfileStatusName, SeriousRateName, EvaluationStatusName FROM [V_Workbase_Export_Cus_ByQuery] WHERE 1 = 1");
+                var parameters = new DynamicParameters();
+
+                // Hàm helper để xử lý tham số cho mệnh đề IN
+                void AddInClause(string paramName, string inputValue)
                 {
-                    _sql += " AND ProductCode IN ( " + Product + " ) ";
+                    if (!string.IsNullOrEmpty(inputValue) && inputValue != "*")
+                    {
+                        // Tách chuỗi thành một danh sách để Dapper xử lý an toàn
+                        var valueList = inputValue.Split(',').Select(s => s.Trim()).ToList();
+                        if (valueList.Any())
+                        {
+                            sqlBuilder.Append($" AND {paramName} IN @{paramName}List");
+                            parameters.Add($"{paramName}List", valueList);
+                        }
+                    }
                 }
-                if (ProfileStatus != "" && ProfileStatus != "'*'")
+
+                AddInClause("ProductCode", Product);
+                AddInClause("ProfileStatus", ProfileStatus);
+                AddInClause("SeriousRate", SeriousRate);
+                AddInClause("EvaluationStatus", Evaluation);
+
+                using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
-                    _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
-                }
-                if (SeriousRate != "" && SeriousRate != "'*'")
-                {
-                    _sql += " AND SeriousRate IN ( " + SeriousRate + " ) ";
-                }
-                if (Evaluation != "" && Evaluation != "'*'")
-                {
-                    _sql += " AND EvaluationStatus IN ( " + Evaluation + " ) ";
-                }
-                using (var db = new SqlConnection(DBHelper.connectionString))
-                {
-                    var items = db.Query<dynamic>(sql: _sql,
-                        commandType: CommandType.Text).ToList();
+                    var items = db.Query<dynamic>(sqlBuilder.ToString(), parameters, commandType: CommandType.Text).ToList();
                     return new OkObjectResult(items);
                 }
             }
             catch (Exception e)
             {
-                var response = new
-                {
-                    ok = false,
-                    message = "Error",
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
+                // ... xử lý lỗi
+                return new BadRequestObjectResult(new { ok = false, error = e.Message });
             }
         }
 
@@ -1003,78 +1048,143 @@ namespace api.immgroup.com.Controllers
             string khd_s_d, string khd_s_m, string khd_s_y, string khd_e_d, string khd_e_m, string khd_e_y, string khdchk, string staffs
             )
         {
+            //try
+            //{
+            //    Function Lib = new Function();
+            //    string Product = Lib.SplitAndAddSeparator(prod);
+            //    string ProfileStatus = Lib.SplitAndAddSeparator(cusstt);
+            //    string ResourceCus = Lib.SplitAndAddSeparator(cusrc);
+            //    string cocfrom = c_s_d + "/" + c_s_m + "/" + c_s_y;
+            //    string cocto = c_e_d + "/" + c_e_m + "/" + c_e_y;
+            //    string khdfrom = khd_s_d + "/" + khd_s_m + "/" + khd_s_y;
+            //    string khdto = khd_e_d + "/" + khd_e_m + "/" + khd_e_y;
+
+            //    string _view = "[V_Workbase_Export_Cus_ByQuery]";
+            //    string _sql = " SELECT ";
+            //    _sql += "  CusId ";
+            //    _sql += " ,CusName ";
+            //    _sql += " ,CusEmail ";
+            //    _sql += " ,CusPhone ";
+            //    _sql += " ,CusGenderName ";
+            //    _sql += " ,RegoinOfficeName ";
+            //    _sql += " ,ProductName ";
+            //    _sql += " ,CusResourceName ";
+            //    _sql += " ,ProfileStatusName ";
+            //    _sql += " ,SeriousRateName ";
+            //    _sql += " ,EvaluationStatusName ";
+            //    _sql += " ,DepositContactDate ";
+            //    _sql += " ,SignedContractDate ";
+            //    _sql += " ,SaleAvatar ";
+            //    _sql += " FROM " + _view ;
+            //    if (staffs != "" && staffs != "All")
+            //    {
+            //        _sql += " INNER JOIN M_RELASIONSHIP ON CUS_ID = CusId	AND RS_CODE1 = 'CS'  AND RS_CODE2 = '"+ staffs + "' ";
+            //    }
+            //    _sql += " WHERE 1 = 1 ";
+            //    if (Product != "" && Product != "'All'")
+            //    {
+            //        _sql += " AND ProductCode IN ( " + Product + " ) ";
+            //    }
+            //    if (ProfileStatus != "" && ProfileStatus != "'All'")
+            //    {
+            //        _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
+            //    }
+            //    if (ResourceCus != "" && ResourceCus != "'All'")
+            //    {
+            //        _sql += " AND CusResourceCode IN ( " + ResourceCus + " ) ";
+            //    }
+
+            //    if (cchk == "on")
+            //    {
+            //        _sql += " AND CONVERT(datetime,[O_DATE02] ,103) BETWEEN CONVERT(datetime,'"+ cocfrom + "',103)  AND  CONVERT(datetime,'" + cocto + "',103) ";
+            //    }
+            //    if (khdchk == "on")
+            //    {
+            //        _sql += " AND CONVERT(datetime,[O_DATE03] ,103) BETWEEN CONVERT(datetime,'" + khdfrom + "',103)  AND  CONVERT(datetime,'" + khdto + "',103) ";
+            //    }
+
+            //    using (var db = new SqlConnection(DBHelper.connectionString))
+            //    {
+            //        var items = db.Query<dynamic>(sql: _sql,
+            //            commandType: CommandType.Text).ToList();
+            //        return new OkObjectResult(items);
+            //    }
+            //}
+            //catch (Exception e)
+            //{
+            //    var response = new
+            //    {
+            //        ok = false,
+            //        message = "Error",
+            //        error = e.Message
+            //    };
+
+            //    return new BadRequestObjectResult(response);
+            //}
             try
             {
-                Function Lib = new Function();
-                string Product = Lib.SplitAndAddSeparator(prod);
-                string ProfileStatus = Lib.SplitAndAddSeparator(cusstt);
-                string ResourceCus = Lib.SplitAndAddSeparator(cusrc);
-                string cocfrom = c_s_d + "/" + c_s_m + "/" + c_s_y;
-                string cocto = c_e_d + "/" + c_e_m + "/" + c_e_y;
-                string khdfrom = khd_s_d + "/" + khd_s_m + "/" + khd_s_y;
-                string khdto = khd_e_d + "/" + khd_e_m + "/" + khd_e_y;
+                var sqlBuilder = new StringBuilder(@"
+            SELECT T.CusId, T.CusName, T.CusEmail, T.CusPhone, T.CusGenderName, T.RegoinOfficeName, 
+                   T.ProductName, T.CusResourceName, T.ProfileStatusName, T.SeriousRateName, 
+                   T.EvaluationStatusName, T.DepositContactDate, T.SignedContractDate, T.SaleAvatar
+            FROM [V_Workbase_Export_Cus_ByQuery] AS T");
 
-                string _view = "[V_Workbase_Export_Cus_ByQuery]";
-                string _sql = " SELECT ";
-                _sql += "  CusId ";
-                _sql += " ,CusName ";
-                _sql += " ,CusEmail ";
-                _sql += " ,CusPhone ";
-                _sql += " ,CusGenderName ";
-                _sql += " ,RegoinOfficeName ";
-                _sql += " ,ProductName ";
-                _sql += " ,CusResourceName ";
-                _sql += " ,ProfileStatusName ";
-                _sql += " ,SeriousRateName ";
-                _sql += " ,EvaluationStatusName ";
-                _sql += " ,DepositContactDate ";
-                _sql += " ,SignedContractDate ";
-                _sql += " ,SaleAvatar ";
-                _sql += " FROM " + _view ;
-                if (staffs != "" && staffs != "All")
+                var parameters = new DynamicParameters();
+
+                // Tham gia bảng nếu có lọc theo nhân viên
+                if (!string.IsNullOrEmpty(staffs) && staffs != "All")
                 {
-                    _sql += " INNER JOIN M_RELASIONSHIP ON CUS_ID = CusId	AND RS_CODE1 = 'CS'  AND RS_CODE2 = '"+ staffs + "' ";
+                    sqlBuilder.Append(" INNER JOIN M_RELASIONSHIP ON RS_CODE1 = 'CS' AND T.CusId = M_RELASIONSHIP.CUS_ID AND M_RELASIONSHIP.RS_CODE2 = @StaffId");
+                    parameters.Add("StaffId", staffs);
                 }
-                _sql += " WHERE 1 = 1 ";
-                if (Product != "" && Product != "'All'")
+
+                sqlBuilder.Append(" WHERE 1 = 1");
+
+                // Xử lý các mệnh đề IN
+                if (!string.IsNullOrEmpty(prod) && prod != "All")
                 {
-                    _sql += " AND ProductCode IN ( " + Product + " ) ";
+                    sqlBuilder.Append(" AND T.ProductCode IN @ProductList");
+                    parameters.Add("ProductList", prod.Split(',').Select(s => s.Trim()).ToList());
                 }
-                if (ProfileStatus != "" && ProfileStatus != "'All'")
+                if (!string.IsNullOrEmpty(cusstt) && cusstt != "All")
                 {
-                    _sql += " AND ProfileStatus IN ( " + ProfileStatus + " ) ";
+                    sqlBuilder.Append(" AND T.ProfileStatus IN @StatusList");
+                    parameters.Add("StatusList", cusstt.Split(',').Select(s => s.Trim()).ToList());
                 }
-                if (ResourceCus != "" && ResourceCus != "'All'")
+                if (!string.IsNullOrEmpty(cusrc) && cusrc != "All")
                 {
-                    _sql += " AND CusResourceCode IN ( " + ResourceCus + " ) ";
+                    sqlBuilder.Append(" AND T.CusResourceCode IN @ResourceList");
+                    parameters.Add("ResourceList", cusrc.Split(',').Select(s => s.Trim()).ToList());
                 }
-              
+
+                // Xử lý các điều kiện ngày tháng
                 if (cchk == "on")
                 {
-                    _sql += " AND CONVERT(datetime,[O_DATE02] ,103) BETWEEN CONVERT(datetime,'"+ cocfrom + "',103)  AND  CONVERT(datetime,'" + cocto + "',103) ";
+                    string cocfrom = $"{c_s_y}-{c_s_m}-{c_s_d}";
+                    string cocto = $"{c_e_y}-{c_e_m}-{c_e_d}";
+                    sqlBuilder.Append(" AND CONVERT(date, T.O_DATE02, 103) BETWEEN @CocFrom AND @CocTo");
+                    parameters.Add("CocFrom", cocfrom);
+                    parameters.Add("CocTo", cocto);
                 }
                 if (khdchk == "on")
                 {
-                    _sql += " AND CONVERT(datetime,[O_DATE03] ,103) BETWEEN CONVERT(datetime,'" + khdfrom + "',103)  AND  CONVERT(datetime,'" + khdto + "',103) ";
+                    string khdfrom = $"{khd_s_y}-{khd_s_m}-{khd_s_d}";
+                    string khdto = $"{khd_e_y}-{khd_e_m}-{khd_e_d}";
+                    sqlBuilder.Append(" AND CONVERT(date, T.O_DATE03, 103) BETWEEN @KhdFrom AND @KhdTo");
+                    parameters.Add("KhdFrom", khdfrom);
+                    parameters.Add("KhdTo", khdto);
                 }
 
-                using (var db = new SqlConnection(DBHelper.connectionString))
+                using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
-                    var items = db.Query<dynamic>(sql: _sql,
-                        commandType: CommandType.Text).ToList();
+                    var items = db.Query<dynamic>(sqlBuilder.ToString(), parameters).ToList();
                     return new OkObjectResult(items);
                 }
             }
             catch (Exception e)
             {
-                var response = new
-                {
-                    ok = false,
-                    message = "Error",
-                    error = e.Message
-                };
-
-                return new BadRequestObjectResult(response);
+                // ... xử lý lỗi
+                return new BadRequestObjectResult(new { ok = false, error = e.Message });
             }
         }
 
@@ -1405,31 +1515,58 @@ namespace api.immgroup.com.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> HrmCandidateAdd([FromBody] dynamic body)
         {
-            string sql =""; 
-            dynamic para = JObject.Parse(body.ToString());  
+            dynamic para = JObject.Parse(body.ToString());
+            string sql = @"
+            INSERT INTO M_HRM_CANDIDATE(
+                CANDIDATE_TOKEN, CANDIDATE_NAME, CANDIDATE_EMAIL, CANDIDATE_PHONE, 
+                CANDIDATE_GENDER, CANDIDATE_BIRTHDAY, CANDIDATE_POSITION, CANDIDATE_LINKDRIVE, 
+                CANDIDATE_STATUS, CANDIDATE_RC, CANDIDATE_NOTE, CANDIDATE_APPLY_DATE, 
+                FLAG_ACTIVE, UPDATE_DATE, COMPANY_APPLY
+            ) VALUES (
+                NEWID(), @Name, @Email, @Phone, 
+                @Gender, '', @Position, '', '', 
+                @Source, @Noted, CONVERT(NVARCHAR(10), GETDATE(), 103), 1, GETDATE(), 
+                @Company
+            )";
             using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
             {
                 connection.Open();
                 try
                 {
-                    sql = " INSERT INTO M_HRM_CANDIDATE(CANDIDATE_TOKEN ,CANDIDATE_NAME ,CANDIDATE_EMAIL ,CANDIDATE_PHONE ,CANDIDATE_GENDER ,CANDIDATE_BIRTHDAY ,CANDIDATE_POSITION ,CANDIDATE_LINKDRIVE ,CANDIDATE_STATUS ,CANDIDATE_RC ,CANDIDATE_NOTE ,CANDIDATE_APPLY_DATE ,FLAG_ACTIVE ,UPDATE_DATE ,COMPANY_APPLY) ";
-                    sql += " VALUES ( ";
-                    sql += " newid() , ";
-                    sql += " N'" + para.rq_name + "', ";
-                    sql += " N'" + para.rq_email + "', ";
-                    sql += " N'" + para.rq_phone + "', ";
-                    sql += " '" + para.rq_gender + "', ";
-                    sql += " '', ";
-                    sql += " N'" + para.rq_position + "', ";
-                    sql += " '','', ";
-                    sql += " N'" + para.rq_source + "', ";
-                    sql += " N'" + para.rq_noted + "', ";
-                    sql += " CONVERT(nvarchar(10), GETDATE(), 103) , 1, GETDATE(), ";
-                    sql += " N'" + para.rq_company + "'";                  
-                    sql += " );";
-                    await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    //sql = " INSERT INTO M_HRM_CANDIDATE(CANDIDATE_TOKEN ,CANDIDATE_NAME ,CANDIDATE_EMAIL ,CANDIDATE_PHONE ,CANDIDATE_GENDER ,CANDIDATE_BIRTHDAY ,CANDIDATE_POSITION ,CANDIDATE_LINKDRIVE ,CANDIDATE_STATUS ,CANDIDATE_RC ,CANDIDATE_NOTE ,CANDIDATE_APPLY_DATE ,FLAG_ACTIVE ,UPDATE_DATE ,COMPANY_APPLY) ";
+                    //sql += " VALUES ( ";
+                    //sql += " newid() , ";
+                    //sql += " N'" + para.rq_name + "', ";
+                    //sql += " N'" + para.rq_email + "', ";
+                    //sql += " N'" + para.rq_phone + "', ";
+                    //sql += " '" + para.rq_gender + "', ";
+                    //sql += " '', ";
+                    //sql += " N'" + para.rq_position + "', ";
+                    //sql += " '','', ";
+                    //sql += " N'" + para.rq_source + "', ";
+                    //sql += " N'" + para.rq_noted + "', ";
+                    //sql += " CONVERT(nvarchar(10), GETDATE(), 103) , 1, GETDATE(), ";
+                    //sql += " N'" + para.rq_company + "'";                  
+                    //sql += " );";
+                    //await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+                    //var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    //return new OkObjectResult(response);                    
+                    
+                    await connection.ExecuteAsync(sql, new
+                    {
+                        Name = (string)para.rq_name,
+                        Email = (string)para.rq_email,
+                        Phone = (string)para.rq_phone,
+                        Gender = (string)para.rq_gender,
+                        Position = (string)para.rq_position,
+                        Source = (string)para.rq_source,
+                        Noted = (string)para.rq_noted,
+                        Company = (string)para.rq_company
+                    });
+
                     var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
                     return new OkObjectResult(response);
+                    
                 }
                 catch (Exception e)
                 {
@@ -1626,192 +1763,371 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        public class InfoSubmitRequest
+        {
+            public string rq_utmSource { get; set; }
+            public string rq_email { get; set; }
+            public string rq_phone { get; set; }
+            public string rq_cusname { get; set; }
+            public string rq_product { get; set; }
+            public string rq_sex { get; set; }
+            public string rq_content { get; set; }
+            public string rq_titleProduct { get; set; }
+            public string rq_getLink { get; set; }
+            public string rq_area { get; set; }
+            public string rq_info { get; set; } // Flag "new" or "existing"
+        }
+
         [HttpPost("crm/func/info/f/web/submit")]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] dynamic body)
+        public async Task<IActionResult> InfoSubmitFromWebSite([FromBody] InfoSubmitRequest data)
         {
-            dynamic para = JObject.Parse(body.ToString());
-            RegexUtilities util = new RegexUtilities();
-            Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
-            Function fc = new Function();
-            int _s = 1;string _flag = "";
-            string utm_source_char  = para.rq_utmSource;
-            string utm_source = para.rq_utmSource;
-            string _e = para.rq_email;
-            string _p = para.rq_phone;
-            string _n = para.rq_cusname;
-            string _prod = para.rq_product;
-            string Cusid = "";
+            //dynamic para = JObject.Parse(body.ToString());
+            //RegexUtilities util = new RegexUtilities();
+            //Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
+            //Function fc = new Function();
+            //int _s = 1;string _flag = "";
+            //string utm_source_char  = para.rq_utmSource;
+            //string utm_source = para.rq_utmSource;
+            //string _e = para.rq_email;
+            //string _p = para.rq_phone;
+            //string _n = para.rq_cusname;
+            //string _prod = para.rq_product;
+            //string Cusid = "";
 
-            string _nextturn = DBHelper.GetColumnVal("SELECT TOP 1 TPD_STAFF_ID FROM [M_TEAMS_PRODUCTS] p INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	WHERE TP_PROD_CODE = '" + para.rq_product + "' AND TPD_FLAG_MAIN = 'checked' AND ';' + p.TP_MEMBERS_ID + ';' LIKE '%;' + Convert(nvarchar,pd.TPD_STAFF_ID) + ';%' AND TPD_FLAG_ACTIVE = 1 AND TP_FLAG_ACTIVE = 1 AND s.FLAG_ACTIVE = 1	ORDER BY TPD_SAS_COUNT ASC", "TPD_STAFF_ID");
+            //string _nextturn = DBHelper.GetColumnVal("SELECT TOP 1 TPD_STAFF_ID FROM [M_TEAMS_PRODUCTS] p INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	WHERE TP_PROD_CODE = '" + para.rq_product + "' AND TPD_FLAG_MAIN = 'checked' AND ';' + p.TP_MEMBERS_ID + ';' LIKE '%;' + Convert(nvarchar,pd.TPD_STAFF_ID) + ';%' AND TPD_FLAG_ACTIVE = 1 AND TP_FLAG_ACTIVE = 1 AND s.FLAG_ACTIVE = 1	ORDER BY TPD_SAS_COUNT ASC", "TPD_STAFF_ID");
 
-            if (_e != "")
+            //if (_e != "")
+            //{
+            //    if (util.IsValidEmail(_e.Trim()))
+            //    {
+            //        DataTable dt = new DataTable();
+            //        dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_EMAIL FROM M_CUSTOMER WHERE 1 = 1 AND CUS_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
+            //        foreach (DataRow dtRow in dt.Rows)
+            //        {
+            //            string[] emailist = dtRow["CUS_EMAIL"].ToString().Split(';');
+            //            foreach (var eml in emailist)
+            //            {
+            //                if (eml.Trim() == _e.Trim())
+            //                {
+            //                    Cusid = dtRow["CUS_ID"].ToString();
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+            //if (Cusid == "" && _p != "")
+            //{
+            //    if (_p.Trim() != "")
+            //    {
+            //        if (regex.IsMatch(_p) == true)
+            //        {
+            //            DataTable dt = new DataTable();
+            //            dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_PHONE FROM M_CUSTOMER WHERE 1 = 1 AND CUS_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
+            //            foreach (DataRow dtRow in dt.Rows)
+            //            {
+            //                string[] emailist = dtRow["CUS_PHONE"].ToString().Split(';');
+            //                foreach (var eml in emailist)
+            //                {
+            //                    if (eml.Trim() == _p.Trim())
+            //                    {
+            //                        Cusid = dtRow["CUS_ID"].ToString();
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}      
+            //string sql = "";
+            //utm_source = fc.CheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
+
+            //if (_e != "" || _p != "")
+            //{
+
+            //    if (para.rq_sex != "Nam") { _s = 0; }
+
+            //    if (Cusid == "" || Cusid == null)
+            //    {
+            //        _flag = "new";
+            //        string str = "";
+            //        string[] AppEmail = null;
+            //        str = _e.ToString();
+            //        char[] splitchar = { ';' };
+            //        AppEmail = str.Split(splitchar);
+            //        string pass = fc.GetUniqueKey(8);
+            //        sql += "INSERT INTO M_CUSTOMER";
+            //        sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
+            //        sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
+            //        sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
+            //        sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
+
+            //        sql += " VALUES";
+            //        sql += " ( ";
+            //        sql += "'',";
+            //        sql += "N'" + _n + "',";
+            //        sql += "N'" + fc.ConvertName(_n) + "',";
+            //        sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
+            //        sql += "N'" + fc.formatpm(_p) + "',";
+            //        sql += "N'" + DateTime.Now.ToString() + "',";
+            //        sql += "GETDATE(),";
+            //        sql += _s + ",";
+            //        sql += "0,";
+            //        sql += "'',";
+            //        sql += "'',";
+            //        sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
+            //        sql += "'CR01',";
+            //        sql += "'',";
+            //        sql += "1,";
+            //        sql += "'',";
+            //        sql += "'',";
+            //        sql += "0,";
+            //        sql += "'',";
+            //        sql += "'',";
+            //        sql += "'',";
+            //        sql += "'',";
+            //        sql += "GETDATE(),";
+            //        sql += "GETDATE(),";
+            //        sql += "'" + pass + "',";
+            //        sql += "N'" + _e.ToLower() + "',";
+            //        sql += "'" + AppEmail[0] + "',";
+            //        sql += "'0',";
+            //        sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
+            //        sql += "N'" + _p + "',";
+            //        sql += "'',";
+            //        sql += "(select NEWID()),";
+            //        sql += "'0','0','0','0','/img/avatar/cus_default_avatar.png',0,0,''";
+            //        sql += " ); ";
+            //        DBHelper.ExecuteQuery(sql);
+            //        Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
+            //    }
+            //}
+
+            //if (Cusid != "" && Cusid != null)
+            //{
+            //    sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
+            //    sql += " CUS_ID, ";
+            //    sql += " S_WEB_CONTENT, ";
+            //    sql += " S_WEB_TITLE, ";
+            //    sql += " S_WEB_SOURCE, ";
+            //    sql += " S_WEB_LINK, ";
+            //    sql += " FLAG_ACTIVE, ";
+            //    sql += " S_WEB_NOTE_1, ";
+            //    sql += " S__WEB_NOTE_2, ";
+            //    sql += " S_WEB_DATE";
+            //    sql += " ) ";
+            //    sql += " VALUES ( ";
+            //    sql += "'" + Cusid + "', ";
+            //    sql += " N'" + para.rq_content + "', ";
+            //    sql += " N'" + para.rq_titleProduct + "', ";
+            //    sql += " N'" + utm_source + "', ";
+            //    sql += " N'" + para.rq_getLink + "', ";
+            //    sql += " '1', ";
+            //    sql += " N'" + para.rq_area + "', ";
+            //    if (_flag == "new")
+            //    {
+            //        sql += " N'', ";
+            //    }
+            //    else
+            //    {
+            //        sql += " N'" + para.rq_info + "', ";
+            //    }
+            //    sql += " GETDATE());";
+            //    DBHelper.ExecuteQuery(sql);
+            //    string _wid = DBHelper.GetColumnVal("SELECT TOP 1 S_WEB_ID FROM M_SUBMIT_FROM_WEBSITE WHERE CUS_ID = " + Cusid+" ORDER BY S_WEB_ID DESC", "S_WEB_ID");
+            //    if (_wid != "" && _wid != null && _flag == "new")
+            //    {
+            //        string apiUrl = "https://system.immgroup.com/dept/saleleads-allocation/submit/" + _wid;
+            //        var formData = new List<KeyValuePair<string, string>>
+            //        {
+            //            new KeyValuePair<string, string>("t_cId", Cusid?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("sl_prod", para.rq_product?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("t_cusinfo",
+            //                $"{para.rq_cusname?.ToString() ?? ""}, {para.rq_email?.ToString() ?? ""}, {para.rq_phone?.ToString() ?? ""}, {para.rq_sex?.ToString() ?? ""}"),
+            //            new KeyValuePair<string, string>("t_cresource", utm_source_char?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("t_noted", $"[AutoSAS] Nguồn:  {para.rq_utmSource} {para.rq_titleProduct}"),
+            //            new KeyValuePair<string, string>("sl_office", "OFFICE01"),
+            //            new KeyValuePair<string, string>("sl_location", para.rq_area?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("t_nextturn", _nextturn?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("sl_agentrf", "9"),
+            //            new KeyValuePair<string, string>("_webId", _wid?.ToString() ?? ""),
+            //            new KeyValuePair<string, string>("t_staffblock", ""),
+            //            new KeyValuePair<string, string>("t_feedback", para.rq_content?.ToString() ?? "")
+            //        };
+            //        HttpContent _dtcontent = new FormUrlEncodedContent(formData); 
+            //        HttpClient _httpClient = new HttpClient();
+            //        HttpResponseMessage resp = await _httpClient.PostAsync(apiUrl, _dtcontent);
+            //    }                
+            //}
+            //var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+            //return new OkObjectResult(response);
+            try
             {
-                if (util.IsValidEmail(_e.Trim()))
+                // Bước 1: Tìm hoặc tạo khách hàng một cách an toàn
+                var (customerId, isNewCustomer) = await FindOrCreateCustomerAsync(data);
+                if (customerId == 0)
                 {
-                    DataTable dt = new DataTable();
-                    dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_EMAIL FROM M_CUSTOMER WHERE 1 = 1 AND CUS_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
-                    foreach (DataRow dtRow in dt.Rows)
+                    return BadRequest(new { ok = false, message = "Invalid customer data." });
+                }
+
+                // Bước 2: Ghi nhận thông tin submit từ website (giữ nguyên)
+                string utmSource = new Function().CheckResourceCodeByUtm_JSON(data.rq_utmSource, "UtmText", "Descript");
+                int webSubmitId = 0;
+                using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    string webSubmitSql = @"
+                INSERT INTO M_SUBMIT_FROM_WEBSITE 
+                    (CUS_ID, S_WEB_CONTENT, S_WEB_TITLE, S_WEB_SOURCE, S_WEB_LINK, FLAG_ACTIVE, S_WEB_NOTE_1, S__NOTE_2, S_WEB_DATE)
+                VALUES (@CustomerId, @Content, @Title, @Source, @Link, '1', @Area, @Info, GETDATE());
+                SELECT CAST(SCOPE_IDENTITY() as int);";
+
+                    webSubmitId = await connection.QuerySingleAsync<int>(webSubmitSql, new
                     {
-                        string[] emailist = dtRow["CUS_EMAIL"].ToString().Split(';');
-                        foreach (var eml in emailist)
-                        {
-                            if (eml.Trim() == _e.Trim())
-                            {
-                                Cusid = dtRow["CUS_ID"].ToString();
-                            }
-                        }
-                    }
+                        CustomerId = customerId,
+                        Content = data.rq_content,
+                        Title = data.rq_titleProduct,
+                        Source = utmSource,
+                        Link = data.rq_getLink,
+                        Area = data.rq_area,
+                        Info = isNewCustomer ? "" : data.rq_info
+                    });
                 }
-            }
-            if (Cusid == "" && _p != "")
-            {
-                if (_p.Trim() != "")
-                {
-                    if (regex.IsMatch(_p) == true)
-                    {
-                        DataTable dt = new DataTable();
-                        dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_PHONE FROM M_CUSTOMER WHERE 1 = 1 AND CUS_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
-                        foreach (DataRow dtRow in dt.Rows)
-                        {
-                            string[] emailist = dtRow["CUS_PHONE"].ToString().Split(';');
-                            foreach (var eml in emailist)
-                            {
-                                if (eml.Trim() == _p.Trim())
-                                {
-                                    Cusid = dtRow["CUS_ID"].ToString();
-                                }
-                            }
-                        }
-                    }
-                }
-            }      
-            string sql = "";
-            utm_source = fc.CheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
 
-            if (_e != "" || _p != "")
-            {
+                // Bước 3: Nếu là khách mới, thực hiện chia lead (đã thêm lại logic _nextturn)
+                if (isNewCustomer && webSubmitId > 0)
+                {
+                    // GỌI HÀM MỚI TẠI ĐÂY ĐỂ LẤY _nextturn MỘT CÁCH AN TOÀN
+                    string nextTurnStaffId = await GetNextTurnStaffIdAsync(data.rq_product);
 
-                if (para.rq_sex != "Nam") { _s = 0; }
-
-                if (Cusid == "" || Cusid == null)
-                {
-                    _flag = "new";
-                    string str = "";
-                    string[] AppEmail = null;
-                    str = _e.ToString();
-                    char[] splitchar = { ';' };
-                    AppEmail = str.Split(splitchar);
-                    string pass = fc.GetUniqueKey(8);
-                    sql += "INSERT INTO M_CUSTOMER";
-                    sql += "(STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET,";
-                    sql += "    CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD,";
-                    sql += "   CUS_APPLIED, INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI,";
-                    sql += "   IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, TEAM_MEMBER_ASSIGNED, STAFF_HANDLING)";
-
-                    sql += " VALUES";
-                    sql += " ( ";
-                    sql += "'',";
-                    sql += "N'" + _n + "',";
-                    sql += "N'" + fc.ConvertName(_n) + "',";
-                    sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
-                    sql += "N'" + fc.formatpm(_p) + "',";
-                    sql += "N'" + DateTime.Now.ToString() + "',";
-                    sql += "GETDATE(),";
-                    sql += _s + ",";
-                    sql += "0,";
-                    sql += "'',";
-                    sql += "'',";
-                    sql += "'7C222FB2927D828AF22F592134E8932480637C0D',";
-                    sql += "'CR01',";
-                    sql += "'',";
-                    sql += "1,";
-                    sql += "'',";
-                    sql += "'',";
-                    sql += "0,";
-                    sql += "'',";
-                    sql += "'',";
-                    sql += "'',";
-                    sql += "'',";
-                    sql += "GETDATE(),";
-                    sql += "GETDATE(),";
-                    sql += "'" + pass + "',";
-                    sql += "N'" + _e.ToLower() + "',";
-                    sql += "'" + AppEmail[0] + "',";
-                    sql += "'0',";
-                    sql += "CONVERT(VARCHAR(max), HASHBYTES('MD5', '" + pass + "'), 2),";
-                    sql += "N'" + _p + "',";
-                    sql += "'',";
-                    sql += "(select NEWID()),";
-                    sql += "'0','0','0','0','/img/avatar/cus_default_avatar.png',0,0,''";
-                    sql += " ); ";
-                    DBHelper.ExecuteQuery(sql);
-                    Cusid = DBHelper.GetColumnVal("SELECT TOP 1 CUS_ID FROM [M_CUSTOMER] ORDER BY CUS_ID DESC", "CUS_ID");
-                }
-            }
-            
-            if (Cusid != "" && Cusid != null)
-            {
-                sql = " INSERT INTO M_SUBMIT_FROM_WEBSITE ( ";
-                sql += " CUS_ID, ";
-                sql += " S_WEB_CONTENT, ";
-                sql += " S_WEB_TITLE, ";
-                sql += " S_WEB_SOURCE, ";
-                sql += " S_WEB_LINK, ";
-                sql += " FLAG_ACTIVE, ";
-                sql += " S_WEB_NOTE_1, ";
-                sql += " S__WEB_NOTE_2, ";
-                sql += " S_WEB_DATE";
-                sql += " ) ";
-                sql += " VALUES ( ";
-                sql += "'" + Cusid + "', ";
-                sql += " N'" + para.rq_content + "', ";
-                sql += " N'" + para.rq_titleProduct + "', ";
-                sql += " N'" + utm_source + "', ";
-                sql += " N'" + para.rq_getLink + "', ";
-                sql += " '1', ";
-                sql += " N'" + para.rq_area + "', ";
-                if (_flag == "new")
-                {
-                    sql += " N'', ";
-                }
-                else
-                {
-                    sql += " N'" + para.rq_info + "', ";
-                }
-                sql += " GETDATE());";
-                DBHelper.ExecuteQuery(sql);
-                string _wid = DBHelper.GetColumnVal("SELECT TOP 1 S_WEB_ID FROM M_SUBMIT_FROM_WEBSITE WHERE CUS_ID = " + Cusid+" ORDER BY S_WEB_ID DESC", "S_WEB_ID");
-                if (_wid != "" && _wid != null && _flag == "new")
-                {
-                    string apiUrl = "https://system.immgroup.com/dept/saleleads-allocation/submit/" + _wid;
+                    // Logic gọi API chia lead của bạn
+                    string apiUrl = "https://system.immgroup.com/dept/saleleads-allocation/submit/" + webSubmitId;
                     var formData = new List<KeyValuePair<string, string>>
                     {
-                        new KeyValuePair<string, string>("t_cId", Cusid?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("sl_prod", para.rq_product?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_cusinfo",
-                            $"{para.rq_cusname?.ToString() ?? ""}, {para.rq_email?.ToString() ?? ""}, {para.rq_phone?.ToString() ?? ""}, {para.rq_sex?.ToString() ?? ""}"),
-                        new KeyValuePair<string, string>("t_cresource", utm_source_char?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_noted", $"[AutoSAS] Nguồn:  {para.rq_utmSource} {para.rq_titleProduct}"),
+                        new KeyValuePair<string, string>("t_cId", customerId.ToString()),
+                        new KeyValuePair<string, string>("sl_prod", data.rq_product ?? ""),
+                        new KeyValuePair<string, string>("t_cusinfo", $"{data.rq_cusname}, {data.rq_email}, {data.rq_phone}, {data.rq_sex}"),
+                        new KeyValuePair<string, string>("t_cresource", data.rq_utmSource ?? ""),
+                        new KeyValuePair<string, string>("t_noted", $"[AutoSAS] Nguồn: {data.rq_utmSource} {data.rq_titleProduct}"),
                         new KeyValuePair<string, string>("sl_office", "OFFICE01"),
-                        new KeyValuePair<string, string>("sl_location", para.rq_area?.ToString() ?? ""),
-                        new KeyValuePair<string, string>("t_nextturn", _nextturn?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("sl_location", data.rq_area ?? ""),
+                        new KeyValuePair<string, string>("t_nextturn", nextTurnStaffId ?? ""), // <-- SỬ DỤNG BIẾN MỚI
                         new KeyValuePair<string, string>("sl_agentrf", "9"),
-                        new KeyValuePair<string, string>("_webId", _wid?.ToString() ?? ""),
+                        new KeyValuePair<string, string>("_webId", webSubmitId.ToString()),
                         new KeyValuePair<string, string>("t_staffblock", ""),
-                        new KeyValuePair<string, string>("t_feedback", para.rq_content?.ToString() ?? "")
+                        new KeyValuePair<string, string>("t_feedback", data.rq_content ?? "")
                     };
-                    HttpContent _dtcontent = new FormUrlEncodedContent(formData); 
+                    HttpContent _dtcontent = new FormUrlEncodedContent(formData);
                     HttpClient _httpClient = new HttpClient();
                     HttpResponseMessage resp = await _httpClient.PostAsync(apiUrl, _dtcontent);
-                }                
-            }
-            var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
-            return new OkObjectResult(response);
+                }
 
+                return Ok(new { ok = true, message = "Success" });
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { ok = false, message = "An error occurred.", error = e.Message });
+            }
+        }
+        private async Task<string> GetNextTurnStaffIdAsync(string productCode)
+        {
+            if (string.IsNullOrEmpty(productCode))
+            {
+                return null;
+            }
+
+            // Câu lệnh SQL gốc của bạn, nhưng đã được tham số hóa để chống SQL Injection
+            const string sql = @"
+                                SELECT TOP 1 
+                                    pd.TPD_STAFF_ID
+                                FROM [M_TEAMS_PRODUCTS] p 
+                                INNER JOIN [M_TEAMS_PRODUCTS_DETAILS] pd ON p.TP_PROD_CODE = pd.TPD_PROD_CODE 
+                                INNER JOIN M_STAFF s ON s.STAFF_ID = pd.TPD_STAFF_ID	
+                                WHERE 
+                                    p.TP_PROD_CODE = @ProductCode 
+                                    AND pd.TPD_FLAG_MAIN = 'checked' 
+                                    AND ';' + p.TP_MEMBERS_ID + ';' LIKE '%;' + CONVERT(nvarchar, pd.TPD_STAFF_ID) + ';%' 
+                                    AND pd.TPD_FLAG_ACTIVE = 1 
+                                    AND p.TP_FLAG_ACTIVE = 1 
+                                    AND s.FLAG_ACTIVE = 1
+                                ORDER BY 
+                                    pd.TPD_SAS_COUNT ASC";
+
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                // Dapper sẽ gán tham số @ProductCode một cách an toàn
+                var staffId = await connection.QueryFirstOrDefaultAsync<string>(sql, new { ProductCode = productCode });
+                return staffId;
+            }
+        }
+        private async Task<(int customerId, bool isNew)> FindOrCreateCustomerAsync(InfoSubmitRequest data)
+        {
+            // Sử dụng chuỗi kết nối từ appsettings.json
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                await connection.OpenAsync();
+
+                // Bước 1: Thử tìm khách hàng bằng email hoặc SĐT một cách an toàn
+                // Tìm kiếm chính xác hơn bằng cách kiểm tra email/SĐT có nằm trong chuỗi được ngăn cách bởi dấu ';' hoặc không
+                string findSql = @"
+                                    SELECT TOP 1 CUS_ID 
+                                    FROM M_CUSTOMER 
+                                    WHERE (';' + CUS_EMAIL + ';' LIKE @EmailPattern) 
+                                       OR (';' + CUS_PHONE + ';' LIKE @PhonePattern)
+                                      AND FLAG_ACTIVE = 1";
+
+                var customerId = await connection.QueryFirstOrDefaultAsync<int?>(findSql, new
+                {
+                    EmailPattern = $"%;{data.rq_email?.Trim()};%",
+                    PhonePattern = $"%;{data.rq_phone?.Trim()};%"
+                });
+
+                // Nếu tìm thấy khách hàng, trả về ID và đánh dấu là khách hàng cũ
+                if (customerId.HasValue && customerId.Value > 0)
+                {
+                    return (customerId.Value, false); // isNew = false
+                }
+
+                // Bước 2: Nếu không tìm thấy, tiến hành tạo khách hàng mới
+                // Chuẩn bị các giá trị cần thiết
+                Function fc = new Function(); // Giả định bạn vẫn cần class Function cho các tiện ích
+                string pass = fc.GetUniqueKey(8); // Tạo mật khẩu ngẫu nhiên
+                string appUser = data.rq_email?.Split(';')[0].Trim() ?? "";
+
+                // Câu lệnh INSERT với đầy đủ các cột và giá trị mặc định như trong code gốc của bạn
+                string insertSql = @"
+                                    INSERT INTO M_CUSTOMER (
+                                        STATUS_ID, CUS_NAME_VN, CUS_NAME_ENG, CUS_EMAIL, CUS_PHONE, CUS_BIRTH, CUS_BIRTH_FULL, CUS_SEX, 
+                                        CUS_MARITAL, CUS_ADDRESS, CUS_TOTAL_ASSET, CUS_PASS, CUS_REVIEW, NOTE, FLAG_ACTIVE, CUS_VIP_CODE, 
+                                        PARTNER_ID, CUS_RELATIVES, CUS_RELATIVES_FOREIGN, CUS_CHILDREN, CUS_RESIDING_ABROAD, CUS_APPLIED, 
+                                        INSERT_DATE, UPDATE_DATE, PASSCUS, APP_EMAIL, APP_USER, APP_EDIT_FLAG, APP_PASS, APP_PHONE, 
+                                        APP_ADDRESS, ROWID, WM_FLAG, FLAG_SEND_NOTI, IBT_FLAG, CAC_FLAG, AVATAR_IMG, TEAM_LEADER_ASSIGNED, 
+                                        TEAM_MEMBER_ASSIGNED, STAFF_HANDLING
+                                    ) VALUES (
+                                        '', @Name, @NameEng, @Email, @Phone, GETDATE(), GETDATE(), @Sex,
+                                        0, '', '', '7C222FB2927D828AF22F592134E8932480637C0D', 'CR01', '', 1, '',
+                                        '', 0, '', '', '', '',
+                                        GETDATE(), GETDATE(), @Pass, @Email, @AppUser, '0', CONVERT(VARCHAR(max), HASHBYTES('MD5', @Pass), 2), @Phone,
+                                        '', NEWID(), '0', '0', '0', '0', '/img/avatar/cus_default_avatar.png', 0,
+                                        0, ''
+                                    );
+                                    SELECT CAST(SCOPE_IDENTITY() as int);"; // Trả về ID của khách hàng vừa được tạo
+
+                var newCustomerId = await connection.QuerySingleAsync<int>(insertSql, new
+                {
+                    Name = data.rq_cusname,
+                    NameEng = fc.ConvertName(data.rq_cusname), // Giả định hàm này chuyển tên sang không dấu
+                    Email = data.rq_email?.ToLower().Trim(),
+                    Phone = data.rq_phone?.Trim(),
+                    Sex = (data.rq_sex == "Nam" ? 1 : 0),
+                    Pass = pass,
+                    AppUser = appUser
+                });
+
+                // Trả về ID mới và đánh dấu là khách hàng mới
+                return (newCustomerId, true); // isNew = true
+            }
         }
 
         [HttpPost("canada/func/info/f/web/submit")]
@@ -2111,130 +2427,152 @@ namespace api.immgroup.com.Controllers
         #endregion
 
         #region 07-2024 API - Form submit from immgroup.com
-       
+        public class AgentRegisterRequest
+        {
+            public string rq_utmSource { get; set; }
+            public string rq_email { get; set; }
+            public string rq_phone { get; set; }
+            public string rq_agentname { get; set; }
+            public string rq_address { get; set; }
+            public string rq_cccd { get; set; }
+            public string rq_cccdDate { get; set; }
+            public string rq_company { get; set; }
+            public string rq_currentJob { get; set; }
+            public string rq_fieldOfwork { get; set; }
+            public string rq_partchannel { get; set; }
+            public string rq_cussource { get; set; }
+            public int rq_gender { get; set; }
+        }
+
         [HttpPost("crm/func/agent/register/submit")]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public async Task<IActionResult> AgentRegisterSubmit([FromBody] dynamic body)
+        public async Task<IActionResult> AgentRegisterSubmit([FromBody] AgentRegisterRequest agentData)
         {
-            dynamic para = JObject.Parse(body.ToString());
-            RegexUtilities util = new RegexUtilities();
-            Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
-            Function fc = new Function();
-            string utm_source = para.rq_utmSource;
-            string _e = para.rq_email;
-            string _p = para.rq_phone;
-            string _n = para.rq_agentname;
-            string _address = para.rq_address;
-            string _cccd = para.rq_cccd;
-            string _cccdDate = para.rq_cccdDate;
-            string _company = para.rq_company;
-            string _currentJob = para.rq_currentJob;
-            string _fieldOfwork = para.rq_fieldOfwork;
-            string _partchannel = para.rq_partchannel;
-            string _cussource = para.rq_cussource;
-            string _gender = para.rq_gender;
-            
-            //if (_e != "")
-            //{
-            //    if (util.IsValidEmail(_e.Trim()))
-            //    {
-            //        DataTable dt = new DataTable();
-            //        dt = DBHelper.DB_ToDataTable("SELECT PARTNER_ID,PARTNER_EMAIL FROM M_PARTNER WHERE 1 = 1 AND PARTNER_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
-            //        foreach (DataRow dtRow in dt.Rows)
-            //        {
-            //            string[] emailist = dtRow["PARTNER_EMAIL"].ToString().Split(';');
-            //            foreach (var eml in emailist)
-            //            {
-            //                if (eml.Trim() == _e.Trim())
-            //                {
-            //                    _AgenId = dtRow["PARTNER_ID"].ToString();
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
-            //if (_AgenId == "" && _p != "")
-            //{
-            //    if (_p.Trim() != "")
-            //    {
-            //        if (regex.IsMatch(_p) == true)
-            //        {
-            //            DataTable dt = new DataTable();
-            //            dt = DBHelper.DB_ToDataTable("SELECT PARTNER_ID,PARTNER_PHONE FROM M_PARTNER WHERE 1 = 1 AND PARTNER_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
-            //            foreach (DataRow dtRow in dt.Rows)
-            //            {
-            //                string[] emailist = dtRow["PARTNER_PHONE"].ToString().Split(';');
-            //                foreach (var eml in emailist)
-            //                {
-            //                    if (eml.Trim() == _p.Trim())
-            //                    {
-            //                        _AgenId = dtRow["PARTNER_ID"].ToString();
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
+            //dynamic para = JObject.Parse(body.ToString());
+            //RegexUtilities util = new RegexUtilities();
+            //Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
+            //Function fc = new Function();
+            //string utm_source = para.rq_utmSource;
+            //string _e = para.rq_email;
+            //string _p = para.rq_phone;
+            //string _n = para.rq_agentname;
+            //string _address = para.rq_address;
+            //string _cccd = para.rq_cccd;
+            //string _cccdDate = para.rq_cccdDate;
+            //string _company = para.rq_company;
+            //string _currentJob = para.rq_currentJob;
+            //string _fieldOfwork = para.rq_fieldOfwork;
+            //string _partchannel = para.rq_partchannel;
+            //string _cussource = para.rq_cussource;
+            //string _gender = para.rq_gender;
+            //string sql = "";
 
-            string sql = "";
-           
-            using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            //using (SqlConnection connection = new SqlConnection(DBHelper.connectionString))
+            //{
+            //    connection.Open();
+            //    try
+            //    {
+            //        if (_e != "" && _p != "" && _cccd != "")
+            //        {
+            //            sql += @"INSERT INTO M_PARTNER (PARTNER_NAME,PARTNER_EMAIL,PARTNER_PHONE,PARTNER_ADDRESS,PARTNER_PASS,PARTNER_PREPARED1,PARTNER_PREPARED2,FLAG_ACTIVE
+            //            ,INSERT_DATE,DATE_CONTACT,PART_CHANEL,PART_SOURCE,PART_PORTFOLIO,PART_CREATOR,ROWID,AVATAR_IMG,PARTNER_CCCD,PARTNER_CCCD_DATE,VERIFY_STEP, PARTNER_GENDER)";
+            //            sql += " VALUES";
+            //            sql += " ( ";
+            //            sql += "N'" + _n + "',";
+            //            sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
+            //            sql += "N'" + fc.formatpm(_p) + "',";
+            //            sql += "N'" + _address + "',";
+            //            sql += "'191DC397C57B606A818664BA16B085EB06432653',";
+            //            sql += "N'" + _company + "',";
+            //            sql += "N'" + _currentJob + "',";
+            //            sql += "1,";
+            //            sql += "GETDATE(),";
+            //            sql += "GETDATE(),";
+            //            sql += "N'" + _partchannel + "',";
+            //            sql += "N'" + _cussource + "',";
+            //            sql += "N'" + _fieldOfwork + "',";
+            //            sql += "1,";
+            //            sql += "(select NEWID()),";
+            //            sql += "'/img/avatar/partner_default_avatar.png',";
+            //            sql += "N'" + _cccd + "',";
+            //            sql += "N'" + _cccdDate + "',";
+            //            sql += "0,";
+            //            sql +=  _gender;
+            //            sql += " ); ";
+            //            await connection.ExecuteAsync(sql, commandType: CommandType.Text);
+            //        }                    
+            //        var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+            //        return new OkObjectResult(response);
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        var response = new
+            //        {
+            //            ok = false,
+            //            message = "Error",
+            //            error = e.Message
+            //        };
+
+            //        return new BadRequestObjectResult(response);
+            //    }
+            //    finally
+            //    {
+            //        connection.Close();
+            //    }
+            //}
+            // Kiểm tra dữ liệu đầu vào cơ bản
+            if (string.IsNullOrWhiteSpace(agentData.rq_email) || string.IsNullOrWhiteSpace(agentData.rq_phone) || string.IsNullOrWhiteSpace(agentData.rq_cccd))
             {
-                connection.Open();
+                return BadRequest(new { ok = false, message = "Email, Phone, and CCCD are required." });
+            }
+
+            string sql = @"
+                        INSERT INTO M_PARTNER (
+                            PARTNER_NAME, PARTNER_EMAIL, PARTNER_PHONE, PARTNER_ADDRESS, PARTNER_PASS, 
+                            PARTNER_PREPARED1, PARTNER_PREPARED2, FLAG_ACTIVE, INSERT_DATE, DATE_CONTACT, 
+                            PART_CHANEL, PART_SOURCE, PART_PORTFOLIO, PART_CREATOR, ROWID, AVATAR_IMG, 
+                            PARTNER_CCCD, PARTNER_CCCD_DATE, VERIFY_STEP, PARTNER_GENDER
+                        ) VALUES (
+                            @Name, @Email, @Phone, @Address, '191DC397C57B606A818664BA16B085EB06432653',
+                            @Company, @CurrentJob, 1, GETDATE(), GETDATE(),
+                            @PartChannel, @CusSource, @FieldOfWork, 1, NEWID(), '/img/avatar/partner_default_avatar.png',
+                            @Cccd, @CccdDate, 0, @Gender
+                        );";
+
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
                 try
                 {
-                    if (_e != "" && _p != "" && _cccd != "")
+                    var parameters = new
                     {
-                        sql += @"INSERT INTO M_PARTNER (PARTNER_NAME,PARTNER_EMAIL,PARTNER_PHONE,PARTNER_ADDRESS,PARTNER_PASS,PARTNER_PREPARED1,PARTNER_PREPARED2,FLAG_ACTIVE
-                        ,INSERT_DATE,DATE_CONTACT,PART_CHANEL,PART_SOURCE,PART_PORTFOLIO,PART_CREATOR,ROWID,AVATAR_IMG,PARTNER_CCCD,PARTNER_CCCD_DATE,VERIFY_STEP, PARTNER_GENDER)";
-                        sql += " VALUES";
-                        sql += " ( ";
-                        sql += "N'" + _n + "',";
-                        sql += "N'" + fc.formatpm(_e.ToLower()) + "',";
-                        sql += "N'" + fc.formatpm(_p) + "',";
-                        sql += "N'" + _address + "',";
-                        sql += "'191DC397C57B606A818664BA16B085EB06432653',";
-                        sql += "N'" + _company + "',";
-                        sql += "N'" + _currentJob + "',";
-                        sql += "1,";
-                        sql += "GETDATE(),";
-                        sql += "GETDATE(),";
-                        sql += "N'" + _partchannel + "',";
-                        sql += "N'" + _cussource + "',";
-                        sql += "N'" + _fieldOfwork + "',";
-                        sql += "1,";
-                        sql += "(select NEWID()),";
-                        sql += "'/img/avatar/partner_default_avatar.png',";
-                        sql += "N'" + _cccd + "',";
-                        sql += "N'" + _cccdDate + "',";
-                        sql += "0,";
-                        sql +=  _gender;
-                        sql += " ); ";
-                        await connection.ExecuteAsync(sql, commandType: CommandType.Text);
-                    }                    
-                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
-                    return new OkObjectResult(response);
+                        Name = agentData.rq_agentname,
+                        Email = agentData.rq_email.ToLower().Trim(),
+                        Phone = agentData.rq_phone.Trim(),
+                        Address = agentData.rq_address,
+                        Company = agentData.rq_company,
+                        CurrentJob = agentData.rq_currentJob,
+                        PartChannel = agentData.rq_partchannel,
+                        CusSource = agentData.rq_cussource,
+                        FieldOfWork = agentData.rq_fieldOfwork,
+                        Cccd = agentData.rq_cccd,
+                        CccdDate = agentData.rq_cccdDate,
+                        Gender = agentData.rq_gender
+                    };
+
+                    await connection.ExecuteAsync(sql, parameters);
+
+                    return new OkObjectResult(new { ok = true, message = "Success" });
                 }
                 catch (Exception e)
                 {
-                    var response = new
-                    {
-                        ok = false,
-                        message = "Error",
-                        error = e.Message
-                    };
-
-                    return new BadRequestObjectResult(response);
-                }
-                finally
-                {
-                    connection.Close();
+                    // Log a more detailed error for administrators
+                    // return a generic error message to the user
+                    return new BadRequestObjectResult(new { ok = false, message = "An error occurred while processing your request.", error = e.Message });
                 }
             }
-            
 
         }
         #endregion
@@ -2273,6 +2611,58 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
             }
         }
+
+        [HttpPost("crm/func/create-noted/submit")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateNotedCrmApi([FromBody] dynamic body)
+        {
+            string connectionStringCan = _configuration.GetConnectionString("DefaultConnection");
+            dynamic para = JObject.Parse(body.ToString());
+            string Cusid = para.rq_cusid;  
+            using (SqlConnection connection = new SqlConnection(connectionStringCan))
+            {
+                connection.Open();
+                try
+                {
+                    string _sql = @"
+                    INSERT INTO M_FEEDBACK (
+                        CUS_ID, STAFF_ID, FEEDBACK_DATE, FEEDBACK_CONTENT, FEEDBACK_PREPARED1, 
+                        FEEDBACK_PREPARED2, FLAG_ACTIVE, INSERT_DATE, UPDATE_DATE, FLAG_SEEN, 
+                        MessageID, FEEDBACK_SUBJECT, FromEmail, ToEmail, CcEmail, BccEmail, FLAG_SEND_OUT
+                    ) VALUES (
+                        @CusId, 1, GETDATE(), @Content, 'C', 
+                        'Public', 1, GETDATE(), GETDATE(), 0, 
+                        '', '', '', '', '', '', 0
+                    );";
+                    // Dapper sẽ tự động gán giá trị một cách an toàn
+                    await connection.ExecuteAsync(_sql, new
+                    {
+                        CusId = Cusid,
+                        Content = "Khách điền form: " + (string)para.rq_content
+                    });
+                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
+        }
+
         #endregion
     }
 }
