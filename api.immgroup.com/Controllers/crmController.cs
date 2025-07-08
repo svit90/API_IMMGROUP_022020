@@ -1979,7 +1979,7 @@ namespace api.immgroup.com.Controllers
                 {
                     string webSubmitSql = @"
                 INSERT INTO M_SUBMIT_FROM_WEBSITE 
-                    (CUS_ID, S_WEB_CONTENT, S_WEB_TITLE, S_WEB_SOURCE, S_WEB_LINK, FLAG_ACTIVE, S_WEB_NOTE_1, S__NOTE_2, S_WEB_DATE)
+                    (CUS_ID, S_WEB_CONTENT, S_WEB_TITLE, S_WEB_SOURCE, S_WEB_LINK, FLAG_ACTIVE, S_WEB_NOTE_1, S__WEB_NOTE_2, S_WEB_DATE)
                 VALUES (@CustomerId, @Content, @Title, @Source, @Link, '1', @Area, @Info, GETDATE());
                 SELECT CAST(SCOPE_IDENTITY() as int);";
 
