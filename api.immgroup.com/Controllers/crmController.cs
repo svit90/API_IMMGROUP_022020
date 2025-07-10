@@ -1355,7 +1355,7 @@ namespace api.immgroup.com.Controllers
         [Produces("application/json")]
         [ProducesResponseType(200, Type = typeof(JsonResult))]
         [AllowAnonymous]
-        public IActionResult ExportBlockedListStaffNotFollowing(string id, string office, string sale)
+        public IActionResult ExportBlockedListStaffNotFollowingOld(string id, string office, string sale)
         {
             try
             {
@@ -1363,6 +1363,37 @@ namespace api.immgroup.com.Controllers
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
                     var items = db.Query<dynamic>(sql: _sql, param: new { @P_Vp = office, @P_Staff = id, @P_Sale = sale },
+                        commandType: CommandType.StoredProcedure).ToList();
+                    return new OkObjectResult(items);
+                }
+            }
+            catch (Exception e)
+            {
+                var response = new
+                {
+                    ok = false,
+                    message = "Error",
+                    error = e.Message
+                };
+
+                return new BadRequestObjectResult(response);
+            }
+        }
+
+        [Route("crm/get/export/customer/blocked/{id}/{office}/{sale}/{prod}/{sm}/{sd}/{sy}/{em}/{ed}/{ey}/")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult ExportBlockedListStaffNotFollowing(string id, string office, string sale, string prod, string sm, string sd, string sy, string em, string ed, string ey)
+        {
+            try
+            {
+                string startday = sm + "-" + sd + "-" + sy;
+                string endday = em + "-" + ed + "-" + ey;
+                string _sql = "_0620_Workbase_Get_ListCus_TeamFlw_Over_Day";
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    var items = db.Query<dynamic>(sql: _sql, param: new { @P_Vp = office, @P_Staff = id, @P_Sale = sale, @P_Prod = prod, @P_Start = startday, @P_End = endday },
                         commandType: CommandType.StoredProcedure).ToList();
                     return new OkObjectResult(items);
                 }
@@ -2012,7 +2043,7 @@ namespace api.immgroup.com.Controllers
                         new KeyValuePair<string, string>("t_noted", $"[AutoSAS] Nguồn: {data.rq_utmSource} {data.rq_titleProduct}"),
                         new KeyValuePair<string, string>("sl_office", "OFFICE01"),
                         new KeyValuePair<string, string>("sl_location", data.rq_area ?? ""),
-                        new KeyValuePair<string, string>("t_nextturn", nextTurnStaffId ?? ""), // <-- SỬ DỤNG BIẾN MỚI
+                        new KeyValuePair<string, string>("t_nextturn", nextTurnStaffId ?? ""),
                         new KeyValuePair<string, string>("sl_agentrf", "9"),
                         new KeyValuePair<string, string>("_webId", webSubmitId.ToString()),
                         new KeyValuePair<string, string>("t_staffblock", ""),
