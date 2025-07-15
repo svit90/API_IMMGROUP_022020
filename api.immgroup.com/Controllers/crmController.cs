@@ -1388,8 +1388,8 @@ namespace api.immgroup.com.Controllers
         {
             try
             {
-                string startday = sm + "-" + sd + "-" + sy;
-                string endday = em + "-" + ed + "-" + ey;
+                string startday = sd + "/" + sm + "/" + sy;
+                string endday = ed + "/" + em + "/" + ey;
                 string _sql = "_0620_Workbase_Get_ListCus_TeamFlw_Over_Day";
                 using (var db = new SqlConnection(DBHelper.connectionString))
                 {
@@ -2054,7 +2054,7 @@ namespace api.immgroup.com.Controllers
                     HttpResponseMessage resp = await _httpClient.PostAsync(apiUrl, _dtcontent);
                 }
 
-                return Ok(new { ok = true, message = "Success" });
+                return Ok(new { ok = true, message = customerId });
             }
             catch (Exception e)
             {
@@ -2694,6 +2694,27 @@ namespace api.immgroup.com.Controllers
             }
         }
 
+        [HttpGet("crm/func/CrmDataSynchronizer/{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult CrmDataSynchronizer(string id)
+        {
+            try
+            {
+                string res_cusid = DBHelper.GetColumnVal("SELECT CUS_ID FROM M_SUBMIT_FROM_WEBSITE w WHERE w.S_WEB_LINK = '" + id + "'", "CUS_ID");
+                var response = new { ok = true, res_cusid = res_cusid, error = "Thao tác hoàn tất" };
+                return new OkObjectResult(response);
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
         #endregion
     }
 }
