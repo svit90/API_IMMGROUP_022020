@@ -2094,38 +2094,64 @@ namespace api.immgroup.com.Controllers
         }
         private async Task<(int customerId, bool isNew)> FindOrCreateCustomerAsync(InfoSubmitRequest data)
         {
+            RegexUtilities util = new RegexUtilities();
+            Regex regex = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
+            Function fc = new Function();
+            string customerId = "";
+            string _e = data.rq_email?.Trim();
+            string _p = data.rq_phone?.Trim();
+            if (_e != "")
+            {
+                if (util.IsValidEmail(_e.Trim()))
+                {
+                    DataTable dt = new DataTable();
+                    dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_EMAIL FROM M_CUSTOMER WHERE 1 = 1 AND CUS_EMAIL LIKE '%" + _e + "%'  AND FLAG_ACTIVE = 1");
+                    foreach (DataRow dtRow in dt.Rows)
+                    {
+                        string[] emailist = dtRow["CUS_EMAIL"].ToString().Split(';');
+                        foreach (var eml in emailist)
+                        {
+                            if (eml.Trim() == _e.Trim())
+                            {
+                                customerId = dtRow["CUS_ID"].ToString();
+                            }
+                        }
+                    }
+                }
+            }
+            if (customerId == "" && _p != "")
+            {
+                if (_p.Trim() != "")
+                {
+                    if (regex.IsMatch(_p) == true)
+                    {
+                        DataTable dt = new DataTable();
+                        dt = DBHelper.DB_ToDataTable("SELECT CUS_ID,CUS_PHONE FROM M_CUSTOMER WHERE 1 = 1 AND CUS_PHONE LIKE '%" + _p + "%'  AND FLAG_ACTIVE = 1");
+                        foreach (DataRow dtRow in dt.Rows)
+                        {
+                            string[] emailist = dtRow["CUS_PHONE"].ToString().Split(';');
+                            foreach (var eml in emailist)
+                            {
+                                if (eml.Trim() == _p.Trim())
+                                {
+                                    customerId = dtRow["CUS_ID"].ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (customerId != "")
+            {
+                return (Convert.ToInt32(customerId), false); // isNew = false
+            }
             // Sử dụng chuỗi kết nối từ appsettings.json
             using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync();               
 
-                // Bước 1: Thử tìm khách hàng bằng email hoặc SĐT một cách an toàn
-                // Tìm kiếm chính xác hơn bằng cách kiểm tra email/SĐT có nằm trong chuỗi được ngăn cách bởi dấu ';' hoặc không
-                string findSql = @"
-                                    SELECT TOP 1 CUS_ID 
-                                    FROM M_CUSTOMER 
-                                    WHERE (';' + CUS_EMAIL + ';' LIKE @EmailPattern) 
-                                       OR (';' + CUS_PHONE + ';' LIKE @PhonePattern)
-                                      AND FLAG_ACTIVE = 1";
-
-                var customerId = await connection.QueryFirstOrDefaultAsync<int?>(findSql, new
-                {
-                    EmailPattern = $"%;{data.rq_email?.Trim()};%",
-                    PhonePattern = $"%;{data.rq_phone?.Trim()};%"
-                });
-
-                // Nếu tìm thấy khách hàng, trả về ID và đánh dấu là khách hàng cũ
-                if (customerId.HasValue && customerId.Value > 0)
-                {
-                    return (customerId.Value, false); // isNew = false
-                }
-
-                // Bước 2: Nếu không tìm thấy, tiến hành tạo khách hàng mới
-                // Chuẩn bị các giá trị cần thiết
-                Function fc = new Function(); // Giả định bạn vẫn cần class Function cho các tiện ích
                 string pass = fc.GetUniqueKey(8); // Tạo mật khẩu ngẫu nhiên
                 string appUser = data.rq_email?.Split(';')[0].Trim() ?? "";
-
                 // Câu lệnh INSERT với đầy đủ các cột và giá trị mặc định như trong code gốc của bạn
                 string insertSql = @"
                                     INSERT INTO M_CUSTOMER (
@@ -2158,6 +2184,61 @@ namespace api.immgroup.com.Controllers
 
                 // Trả về ID mới và đánh dấu là khách hàng mới
                 return (newCustomerId, true); // isNew = true
+            }
+        }
+
+        [HttpPost("crm/func/advisory/noted/submit")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConversationAddNewForAdvisory([FromBody] dynamic body)
+        {   
+
+            dynamic para = JObject.Parse(body.ToString());
+            Function fc = new Function();
+            string _cid = para.rq_cid;
+            string _content = para.rq_content;
+            EmailHelper eh = new EmailHelper();
+            using (SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                connection.Open();
+                try
+                {
+                    string _sql = @"
+                                    INSERT INTO M_FEEDBACK (
+                                        CUS_ID, STAFF_ID, FEEDBACK_DATE, FEEDBACK_CONTENT, FEEDBACK_PREPARED1, 
+                                        FEEDBACK_PREPARED2, FLAG_ACTIVE, INSERT_DATE, UPDATE_DATE, FLAG_SEEN, 
+                                        MessageID, FEEDBACK_SUBJECT, FromEmail, ToEmail, CcEmail, BccEmail, FLAG_SEND_OUT
+                                    ) VALUES (
+                                        @CusId, 23, GETDATE(), @FeedbackContent, 'C', 
+                                        'Public', 1, GETDATE(), GETDATE(), 0, 
+                                        '', '', '', '', '', '', 0
+                                    );";
+                    await connection.ExecuteAsync(_sql, new
+                    {
+                        CusId = _cid,
+                        FeedbackContent = "Khách điền form đánh giá độ sẵn sàng: \n " + para.rq_content 
+                    }, commandType: CommandType.Text);
+
+                    var response = new { ok = true, message = "Success", error = "Thao tác hoàn tất" };
+                    return new OkObjectResult(response);
+                }
+                catch (Exception e)
+                {
+                    var response = new
+                    {
+                        ok = false,
+                        message = "Error",
+                        error = e.Message
+                    };
+
+                    return new BadRequestObjectResult(response);
+                }
+                finally
+                {
+                    connection.Close();
+                }
             }
         }
 
