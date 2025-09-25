@@ -20,6 +20,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using System.Text;
+using System.Text.Encodings.Web;
 
 namespace api.immgroup.com.Controllers
 {
@@ -2795,6 +2796,298 @@ namespace api.immgroup.com.Controllers
             {
                 return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
             }
+        }
+
+        [HttpGet("crm-api/get-list-customers")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetlistCusForAI()
+        {       
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetListCus]";
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new { ok = true, customers = items };
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-conversation-customers/{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetConversationCusForAI(int id)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetTakecareCus_History]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @CusId = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-customers-dvsd/{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetCusDVSDForAI(int id)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetProduct_ByCus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @CusId = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-customers-service-rating")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetCusServiceRatingForAI()
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetService_Rating]";
+
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-blocked-leads")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetCusBlockedLeadForAI()
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetBlocked_Leads]";
+
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-customers-liststaff/{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetCusListStaffForAI(int id)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetListStaff_TakecareCus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @CusId = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+        [HttpGet("crm-api/get-all-sas-record")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetSASRecordForAI()
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetAllDataSAS]";
+
+                    var items = db.Query<dynamic>(sql: sql, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+
+        [HttpGet("crm-api/get-fee-of-cus/{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(JsonResult))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(JsonResult))]
+        [AllowAnonymous]
+        public IActionResult APICrmGetAllFeeRecordForAI(int id)
+        {
+            try
+            {
+                using (var db = new SqlConnection(DBHelper.connectionString))
+                {
+                    const string sql = "[dbo].[2025_APIforAI_GetFeeOfCus]";
+
+                    var items = db.Query<dynamic>(sql: sql, param: new { @CusId = id }, commandType: CommandType.StoredProcedure).ToList();
+
+                    var response = new
+                    {
+                        ok = true,
+                        regulations = items,
+                    };
+
+                    return new OkObjectResult(response);
+                }
+            }
+            catch (SqlException ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi cơ sở dữ liệu" });
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
+            }
+        }
+       
+        // Helpers
+        private static string SafeGet(dynamic row, string key)
+        {
+            try
+            {
+                var dict = row as IDictionary<string, object>;
+                if (dict != null && dict.ContainsKey(key) && dict[key] != null)
+                    return dict[key].ToString();
+                var val = row?.GetType().GetProperty(key)?.GetValue(row, null);
+                return val?.ToString() ?? "";
+            }
+            catch { return ""; }
+        }
+
+        private static string JGet(System.Text.Json.JsonElement el, string prop)
+        {
+            return el.TryGetProperty(prop, out var v) ? v.ToString() : "";
+        }
+
+        private static string CleanHtml(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            var un = System.Net.WebUtility.HtmlDecode(s);
+            // loại bỏ tag đơn giản
+            return System.Text.RegularExpressions.Regex.Replace(un, "<[^>]+>", "").Trim();
         }
         #endregion
     }
