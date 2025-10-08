@@ -15,12 +15,13 @@ using api.immgroup.com.Models;
 using Microsoft.AspNetCore.Cors;
 using Library;
 using Newtonsoft.Json.Linq;
-using System.Text.Json;
 using System.Net;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.IO;
+using Microsoft.AspNetCore.StaticFiles;
+using Newtonsoft.Json;
 
 namespace api.immgroup.com.Controllers
 {
@@ -2005,7 +2006,7 @@ namespace api.immgroup.com.Controllers
                 }
 
                 // Bước 2: Ghi nhận thông tin submit từ website (giữ nguyên)
-                string utmSource = new Function().CheckResourceCodeByUtm_JSON(data.rq_utmSource, "UtmText", "Descript");
+                string utmSource = LocalCheckResourceCodeByUtm_JSON(data.rq_utmSource, "UtmText", "Descript");
                 int webSubmitId = 0;
                 using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
@@ -2265,7 +2266,7 @@ namespace api.immgroup.com.Controllers
             string _n = para.rq_cusname;
             string Cusid = "";
             string sql = "";
-            utm_source = fc.CheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
+            utm_source = LocalCheckResourceCodeByUtm_JSON(utm_source, "UtmText", "Descript");
             using (SqlConnection sqlConnection = new SqlConnection(connectionStringCan))
             {
                 sqlConnection.Open();
@@ -3062,8 +3063,164 @@ namespace api.immgroup.com.Controllers
                 return new BadRequestObjectResult(new { ok = false, error = "Lỗi không xác định" });
             }
         }
-       
+
+        private static readonly string RootDocs = @"C:\inetpub\wwwroot\workspace.immgroup.com\files\filer\files";
+  
+        // ========== HELPERS ==========
+        private static string CustomerFolderPath(int customerId)
+        {
+            var path = Path.Combine(RootDocs, customerId.ToString());
+            var full = Path.GetFullPath(path);
+            var root = Path.GetFullPath(RootDocs);
+            if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Invalid customer path.");
+            return full;
+        }   
+
+        private static string HumanSize(long bytes)
+        {
+            string[] u = { "B", "KB", "MB", "GB", "TB" };
+            double v = bytes; int i = 0; while (v >= 1024 && i < u.Length - 1) { v /= 1024; i++; }
+            return $"{v:0.##} {u[i]}";
+        }
+
+        // ========== 1) LIST FILES (JSON ONLY) ==========
+        [HttpGet("crm-ui/document/{customer_id:int}")]
+        [AllowAnonymous]
+        public IActionResult ListCustomerFiles([FromRoute] int customer_id, [FromQuery] string? access_key)
+        {  
+            try
+            {
+                var folder = CustomerFolderPath(customer_id);
+                if (!Directory.Exists(folder))
+                {
+                    return new JsonResult(new
+                    {
+                        ok = true,
+                        customer_id,
+                        folder,
+                        files = Array.Empty<object>()
+                    });
+                }
+
+                var files = new DirectoryInfo(folder)
+                    .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
+                    .OrderByDescending(f => f.LastWriteTimeUtc)
+                    .Select(f => new {
+                        name = f.Name,
+                        size_bytes = f.Length,
+                        size_human = HumanSize(f.Length),
+                        last_modified = f.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")
+                    })
+                    .ToList();
+
+                return new JsonResult(new
+                {
+                    ok = true,
+                    customer_id,
+                    folder,
+                    files
+                });
+            }
+            catch (Exception ex)
+            {
+                return Problem(detail: ex.Message, title: "List files failed");
+            }
+        }
+
+        // ========== 2) DOWNLOAD FILE ==========
+        [HttpGet("crm-ui/document/{customer_id:int}/download")]
+        [AllowAnonymous]
+        public IActionResult DownloadCustomerFile(
+            [FromRoute] int customer_id,
+            [FromQuery] string? access_key,
+            [FromQuery] string? name)
+        {          
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest(new { ok = false, error = "Missing file name" });
+
+            try
+            {
+                var folder = CustomerFolderPath(customer_id);
+                var fileName = name.Trim();
+
+                // chống path traversal
+                if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
+                    return BadRequest(new { ok = false, error = "Invalid file name" });
+
+                var filePath = Path.GetFullPath(Path.Combine(folder, fileName));
+                var root = Path.GetFullPath(folder);
+                if (!filePath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(new { ok = false, error = "Invalid file path" });
+
+                if (!System.IO.File.Exists(filePath))
+                    return NotFound(new { ok = false, error = "File not found" });               
+
+                var provider = new FileExtensionContentTypeProvider();
+                if (!provider.TryGetContentType(filePath, out var contentType))
+                    contentType = "application/octet-stream";
+
+                var fi = new FileInfo(filePath);
+                Response.Headers["Content-Length"] = fi.Length.ToString();
+                return PhysicalFile(filePath, contentType, Path.GetFileName(filePath), enableRangeProcessing: true);
+            }
+            catch (Exception ex)
+            {
+                return Problem(detail: ex.Message, title: "Download failed");
+            }
+        }
+
         // Helpers
+        private static string LocalCheckResourceCodeByUtm_JSON(string _input, string _keyToMatch, string _keyToReturn)
+        {
+            string _reval = "";
+            var url = "https://system.immgroup.com/files/lib/utm_source.json"; // Thay thế bằng URL thực của file JSON của bạn
+
+            try
+            {
+                // Tải chuỗi JSON từ URL với Encoding.UTF8 để đảm bảo xử lý ký tự đúng
+                using (WebClient wc = new WebClient())
+                {
+                    wc.Encoding = System.Text.Encoding.UTF8; // Đặt encoding cho WebClient
+                    string jsonString = wc.DownloadString(url);
+
+                    // Parse chuỗi JSON
+                    JArray jsonArray = JArray.Parse(jsonString);
+
+                    // Lặp qua từng đối tượng (row) trong mảng JSON
+                    foreach (JObject item in jsonArray)
+                    {
+                        // Kiểm tra xem đối tượng có chứa _keyToMatch không và giá trị của nó có khớp với _input không
+                        if (item.ContainsKey(_keyToMatch) && item[_keyToMatch].ToString() == _input)
+                        {
+                            // Nếu khớp, lấy giá trị từ _keyToReturn
+                            if (item.ContainsKey(_keyToReturn))
+                            {
+                                _reval = item[_keyToReturn].ToString();
+                                break; // Tìm thấy, thoát khỏi vòng lặp
+                            }
+                        }
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                _reval = $"Lỗi khi tải file JSON: {ex.Message}";
+                // Xử lý lỗi tải file (ví dụ: file không tồn tại, lỗi mạng)
+            }
+            catch (JsonReaderException ex)
+            {
+                _reval = $"Lỗi khi đọc JSON: {ex.Message}";
+                // Xử lý lỗi cú pháp JSON
+            }
+            catch (Exception ex)
+            {
+                _reval = $"Một lỗi không xác định đã xảy ra: {ex.Message}";
+                // Xử lý các lỗi khác
+            }
+
+            return _reval.Trim();
+        }
         private static string SafeGet(dynamic row, string key)
         {
             try

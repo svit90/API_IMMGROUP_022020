@@ -49,7 +49,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WorkbaseImm_MVC\Library\Library.csproj" />
+    <Reference Include="Library">
+      <HintPath>..\..\WorkbaseImm_MVC\bin\Library.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   
